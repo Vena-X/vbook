@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V-BOOK — Booking Mobil Operasional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=IBM+Plex+Mono:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --gold:#D9B65C;
+    --gold-soft:#F0D899;
+    --green:#3EDB8F;
+    --red:#FF7B83;
+    --blue:#6FB3FF;
+    --text:#F6F8FB;
+    --text-dim:rgba(246,248,251,.62);
+    --text-dim-2:rgba(246,248,251,.36);
+    --glass-bg:rgba(255,255,255,.055);
+    --glass-bg-2:rgba(255,255,255,.085);
+    --glass-border:rgba(255,255,255,.16);
+    --mono:'IBM Plex Mono',monospace;
+    --sans:'Inter',sans-serif;
+    --serif:'Playfair Display',serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    color:var(--text);
+    font-family:var(--sans);
+    min-height:100vh;
+    background:linear-gradient(160deg,#070B14 0%,#101B30 48%,#070B14 100%);
+    position:relative;
+    overflow-x:hidden;
+  }
+  body::before,body::after{
+    content:'';position:fixed;border-radius:50%;filter:blur(70px);z-index:0;pointer-events:none;
+  }
+  body::before{width:460px;height:460px;background:var(--gold);opacity:.16;top:-140px;left:-120px;}
+  body::after{width:560px;height:560px;background:#1E5AA8;opacity:.22;bottom:-180px;right:-140px;}
+  ::-webkit-scrollbar{height:6px;width:6px;}
+  ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:4px;}
+
+  .glass{
+    background:var(--glass-bg);
+    backdrop-filter:blur(20px) saturate(140%);
+    -webkit-backdrop-filter:blur(20px) saturate(140%);
+    border:1px solid var(--glass-border);
+    box-shadow:0 10px 34px rgba(0,0,0,.28);
+  }
+
+  /* ---------- HEADER ---------- */
+  header{
+    position:sticky;top:0;z-index:50;
+    border-radius:0 0 18px 18px;
+    margin:0 auto;max-width:1180px;
+  }
+  header.glass{ border-top:none; }
+  .header-inner{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 20px;gap:16px;flex-wrap:wrap;
+  }
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand-mark{
+    width:42px;height:42px;border-radius:12px;
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(217,182,92,.45);
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+    box-shadow:0 0 18px rgba(217,182,92,.18) inset;
+  }
+  .brand-mark svg{width:24px;height:24px;}
+  .brand-text .title{font-family:var(--serif);font-weight:700;font-size:18px;letter-spacing:.5px;color:var(--gold-soft);}
+  .brand-text .sub{font-size:10px;color:var(--text-dim);letter-spacing:1.6px;text-transform:uppercase;margin-top:1px;}
+  .clock-box{
+    font-family:var(--mono);
+    border-radius:10px;
+    padding:9px 16px;
+    display:flex;flex-direction:column;align-items:flex-end;
+    line-height:1.1;
+    background:rgba(0,0,0,.18);
+    border:1px solid var(--glass-border);
+  }
+  .clock-time{font-size:19px;font-weight:600;letter-spacing:2px;color:var(--gold-soft);}
+  .clock-date{font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-top:2px;text-transform:uppercase;}
+  nav.tabs{
+    display:flex;gap:4px;padding:0 20px;
+    border-top:1px solid rgba(255,255,255,.08);
+  }
+  nav.tabs button{
+    background:none;border:none;color:var(--text-dim);
+    font-family:var(--sans);font-size:12px;font-weight:700;
+    padding:12px 16px;cursor:pointer;
+    border-bottom:2px solid transparent;
+    letter-spacing:1px;text-transform:uppercase;
+  }
+  nav.tabs button.active{color:var(--gold-soft);border-bottom-color:var(--gold);}
+  nav.tabs button:hover{color:var(--text);}
+
+  main{max-width:1180px;margin:0 auto;padding:20px 20px 30px;position:relative;z-index:1;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  .page-title{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+  .page-title h1{font-family:var(--serif);font-size:21px;margin:0;font-weight:700;color:var(--text);}
+  .page-title .meta{font-size:11px;color:var(--text-dim);font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px;}
+
+  /* ---------- TICKER ---------- */
+  .ticker{
+    border-radius:30px;padding:10px 0;margin-bottom:14px;overflow:hidden;position:relative;
+  }
+  .ticker-track{
+    display:flex;width:max-content;white-space:nowrap;
+    animation:tickerScroll 22s linear infinite;
+    font-family:var(--mono);font-size:12px;font-weight:600;color:var(--green);letter-spacing:.4px;
+  }
+  .ticker-track span{padding:0 28px;}
+  @keyframes tickerScroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+
+  .blackout-banner{
+    border-radius:12px;
+    padding:10px 14px;margin-bottom:14px;
+    font-size:11px;color:var(--text-dim);font-family:var(--mono);
+    display:flex;align-items:center;gap:8px;letter-spacing:.3px;
+    background:repeating-linear-gradient(45deg,rgba(255,255,255,.025) 0 10px,rgba(255,255,255,.05) 10px 20px);
+  }
+
+  /* ---------- BOARD ---------- */
+  .slot-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+    gap:12px;
+  }
+  .slot-card{
+    border-radius:16px;
+    padding:15px;
+    position:relative;
+    overflow:hidden;
+    min-height:180px;
+    display:flex;flex-direction:column;
+    transition:border-color .2s;
+  }
+  .slot-card.is-current{border-color:rgba(62,219,143,.55);}
+  .slot-card.is-overtime{border-color:rgba(255,123,131,.55);}
+  .slot-time{
+    font-family:var(--mono);font-weight:700;font-size:17px;letter-spacing:.5px;color:var(--text);
+  }
+  .slot-status{
+    margin-top:7px;font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
+    display:flex;align-items:center;gap:6px;
+  }
+  .dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0;}
+  .dot.green{background:var(--green);}
+  .dot.gold{background:var(--gold);}
+  .dot.red{background:var(--red);}
+  .dot.gray{background:var(--text-dim-2);}
+  .blink{animation:blink 1s steps(1) infinite;}
+  @keyframes blink{50%{opacity:.12;}}
+  .slot-body{margin-top:10px;font-size:11.5px;color:var(--text-dim);flex:1;display:flex;flex-direction:column;gap:4px;}
+  .slot-body .req-name{color:var(--gold-soft);font-weight:700;font-size:13px;letter-spacing:.3px;}
+  .slot-body .field-row{display:flex;gap:5px;}
+  .slot-body .field-row .lbl{color:var(--text-dim-2);min-width:48px;flex-shrink:0;}
+  .slot-body a.maps-link{color:var(--blue);text-decoration:none;border-bottom:1px dotted rgba(111,179,255,.5);}
+  .slot-body a.maps-link:hover{color:var(--gold-soft);}
+  .passenger-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px;}
+  .passenger-chips span{background:rgba(255,255,255,.06);border:1px solid var(--glass-border);border-radius:5px;padding:1px 6px;font-size:9.5px;color:var(--text-dim);}
+  .slot-countdown{
+    margin-top:auto;padding-top:9px;border-top:1px solid rgba(255,255,255,.08);
+    font-family:var(--mono);font-size:13px;font-weight:600;
+  }
+  .slot-countdown.red{color:var(--red);}
+  .slot-countdown.gold{color:var(--gold);}
+  .slot-card.empty .slot-status{color:var(--text-dim-2);}
+
+  @media (max-width:700px){
+    .slot-grid{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:8px;flex-wrap:nowrap;}
+    .slot-card{min-width:80vw;flex:0 0 auto;scroll-snap-align:start;}
+  }
+
+  /* ---------- PANELS / FORMS ---------- */
+  .panel{ border-radius:18px; padding:20px;margin-bottom:16px; }
+  .panel h2{margin:0 0 13px;font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.6px;}
+  .login-card{max-width:380px;margin:0 auto;}
+  .login-card .brand-mark{width:54px;height:54px;margin:0 auto 14px;}
+  .login-card .brand-mark svg{width:30px;height:30px;}
+  .login-title{text-align:center;font-family:var(--serif);font-size:19px;color:var(--gold-soft);margin-bottom:4px;}
+  .login-sub{text-align:center;font-size:11px;color:var(--text-dim);margin-bottom:20px;letter-spacing:.3px;}
+
+  .status-banner{
+    display:flex;align-items:center;gap:10px;
+    padding:11px 14px;border-radius:12px;margin-bottom:16px;
+    font-size:11.5px;font-family:var(--mono);font-weight:600;letter-spacing:.3px;
+  }
+  .status-banner.open{background:rgba(62,219,143,.08);border:1px solid rgba(62,219,143,.3);color:var(--green);}
+  .status-banner.closed{background:rgba(255,123,131,.08);border:1px solid rgba(255,123,131,.3);color:var(--red);}
+  .status-banner.override{background:rgba(111,179,255,.08);border:1px solid rgba(111,179,255,.3);color:var(--blue);}
+
+  label{display:block;font-size:11px;color:var(--text-dim);margin:14px 0 6px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;}
+  label:first-child{margin-top:0;}
+  select,input[type=text],input[type=password]{
+    width:100%;background:rgba(0,0,0,.22);border:1px solid var(--glass-border);
+    color:var(--text);border-radius:10px;padding:11px 12px;font-size:13px;
+    font-family:var(--sans);
+  }
+  input[type=text]{text-transform:uppercase;letter-spacing:.2px;}
+  input[type=text]::placeholder{text-transform:none;}
+  select:disabled{color:var(--text-dim-2);cursor:not-allowed;}
+  select option{background:#0E1422;color:var(--text);}
+  select option:disabled{color:#48506A;}
+  .input-with-btn{display:flex;gap:8px;}
+  .input-with-btn input{flex:1;}
+  .checkbox-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:6px;}
+  .chk-item{
+    display:flex;align-items:center;gap:7px;background:rgba(0,0,0,.18);
+    border:1px solid var(--glass-border);border-radius:8px;padding:8px 10px;font-size:11.5px;
+  }
+  .chk-item input{accent-color:var(--gold);}
+  .btn{
+    border:none;border-radius:10px;padding:11px 18px;font-weight:700;font-size:12.5px;
+    cursor:pointer;font-family:var(--sans);letter-spacing:.5px;text-transform:uppercase;
+  }
+  .btn-primary{background:linear-gradient(135deg,var(--gold-soft),var(--gold));color:#231904;}
+  .btn-primary:disabled{background:rgba(255,255,255,.08);color:var(--text-dim-2);cursor:not-allowed;}
+  .btn-ghost{background:rgba(255,255,255,.04);border:1px solid var(--glass-border);color:var(--text-dim);}
+  .btn-ghost:hover{color:var(--text);border-color:rgba(255,255,255,.3);}
+  .btn-danger{background:rgba(255,123,131,.12);color:var(--red);border:1px solid rgba(255,123,131,.35);}
+  .btn-gps{background:rgba(111,179,255,.12);color:var(--blue);border:1px solid rgba(111,179,255,.35);white-space:nowrap;}
+  .btn-small{padding:7px 11px;font-size:10.5px;border-radius:8px;}
+  .btn-block{width:100%;}
+  .topbar-session{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+  .session-pill{
+    font-family:var(--mono);font-size:11.5px;border-radius:20px;padding:6px 14px;
+    background:rgba(255,255,255,.05);border:1px solid var(--glass-border);
+  }
+  .session-pill b{color:var(--gold-soft);}
+  .login-error{color:var(--red);font-size:11.5px;margin-top:10px;text-align:center;display:none;}
+  .login-hint{font-size:10.5px;color:var(--text-dim-2);margin-top:14px;text-align:center;}
+
+  table{width:100%;border-collapse:collapse;font-size:11.5px;}
+  th{
+    text-align:left;color:var(--text-dim);font-weight:700;font-size:10px;
+    letter-spacing:.6px;padding:8px 10px;border-bottom:1px solid var(--glass-border);text-transform:uppercase;
+  }
+  td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.06);vertical-align:top;}
+  tr:hover td{background:rgba(255,255,255,.02);}
+  .badge{font-family:var(--mono);font-size:9.5px;font-weight:700;padding:3px 7px;border-radius:6px;letter-spacing:.4px;}
+  .badge.booked{background:rgba(217,182,92,.14);color:var(--gold-soft);}
+  .badge.inuse{background:rgba(62,219,143,.14);color:var(--green);}
+  .badge.overtime{background:rgba(255,123,131,.14);color:var(--red);}
+  .badge.cleared{background:rgba(255,255,255,.08);color:var(--text-dim);}
+
+  .override-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+  .override-opt{
+    flex:1;min-width:140px;border:1px solid var(--glass-border);background:rgba(255,255,255,.03);
+    border-radius:10px;padding:11px;cursor:pointer;text-align:center;font-size:11.5px;font-weight:700;
+    text-transform:uppercase;letter-spacing:.4px;
+  }
+  .override-opt.active-normal{border-color:rgba(255,255,255,.4);color:var(--text);}
+  .override-opt.active-open{border-color:var(--green);color:var(--green);background:rgba(62,219,143,.08);}
+  .override-opt.active-close{border-color:var(--red);color:var(--red);background:rgba(255,123,131,.08);}
+
+  .note{font-size:10.5px;color:var(--text-dim-2);margin-top:10px;line-height:1.6;}
+  .empty-state{text-align:center;padding:30px 10px;color:var(--text-dim-2);font-size:11.5px;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;}
+  @media (max-width:600px){.form-grid{grid-template-columns:1fr;}}
+
+  footer{
+    max-width:1180px;margin:14px auto 24px;padding:14px 20px;border-radius:16px;
+    text-align:center;font-size:10.5px;color:var(--text-dim-2);letter-spacing:.6px;position:relative;z-index:1;
+  }
+  footer b{color:var(--gold-soft);}
+</style>
+</head>
+<body>
+
+<header class="glass">
+  <div class="header-inner">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="24" cy="24" r="19" stroke="#D9B65C" stroke-width="2.2"/>
+          <circle cx="24" cy="24" r="4.2" fill="#D9B65C"/>
+          <path d="M24 5V14" stroke="#D9B65C" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M24 34V43" stroke="#D9B65C" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M9.5 13L16.5 19.5" stroke="#D9B65C" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M38.5 35L31.5 28.5" stroke="#D9B65C" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M9.5 35L16.5 28.5" stroke="#D9B65C" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M38.5 13L31.5 19.5" stroke="#D9B65C" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <div class="title">V · BOOK</div>
+        <div class="sub">Fleet Reservation System</div>
+      </div>
+    </div>
+    <div class="clock-box">
+      <div class="clock-time" id="clockTime">--:--:--</div>
+      <div class="clock-date" id="clockDate">-</div>
+    </div>
+  </div>
+  <nav class="tabs">
+    <button data-tab="board" class="active">Pusat Kendali Armada</button>
+    <button data-tab="request">Request</button>
+    <button data-tab="admin">Admin</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ============ BOARD VIEW ============ -->
+  <section class="view active" id="view-board">
+    <div class="page-title">
+      <h1>Pusat Kendali Armada</h1>
+      <span class="meta" id="boardDateLabel"></span>
+    </div>
+    <div class="ticker glass">
+      <div class="ticker-track" id="tickerTrack"><span>MEMUAT...</span></div>
+    </div>
+    <div class="blackout-banner glass">⛔ JAM ISTIRAHAT 12:00–14:00 — TIDAK ADA SESI BOOKING PADA JAM INI.</div>
+    <div class="slot-grid" id="boardGrid"></div>
+  </section>
+
+  <!-- ============ REQUEST VIEW ============ -->
+  <section class="view" id="view-request">
+    <div id="requestLogin">
+      <div class="page-title"><h1>Request Mobil</h1></div>
+      <div class="panel glass login-card">
+        <div class="brand-mark" style="border-color:rgba(217,182,92,.45);">
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="24" cy="24" r="19" stroke="#D9B65C" stroke-width="2.2"/>
+            <circle cx="24" cy="24" r="4.2" fill="#D9B65C"/>
+            <path d="M24 5V14" stroke="#D9B65C" stroke-width="2.2" stroke-linecap="round"/>
+            <path d="M24 34V43" stroke="#D9B65C" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="login-title">Masuk Sebagai Requester</div>
+        <div class="login-sub">Pilih nama Anda &amp; masukkan password</div>
+        <label>Nama</label>
+        <select id="loginNameSelect">
+          <option value="" disabled selected>— PILIH NAMA —</option>
+        </select>
+        <label>Password</label>
+        <input type="password" id="loginPasswordInput" placeholder="••••">
+        <div style="margin-top:18px;"><button class="btn btn-primary btn-block" id="loginSubmitBtn">Masuk</button></div>
+        <div class="login-error" id="loginError">Nama atau password salah.</div>
+        <div class="login-hint">Demo password untuk semua akun: <b style="color:var(--text-dim)">1234</b></div>
+      </div>
+    </div>
+
+    <div id="requestApp" style="display:none;">
+      <div class="topbar-session">
+        <div class="session-pill">Login sebagai <b id="reqUserName">-</b></div>
+        <button class="btn btn-ghost btn-small" id="reqLogoutBtn">Keluar</button>
+      </div>
+      <div id="reqStatusBanner"></div>
+
+      <div class="panel glass">
+        <h2>Form Request Mobil — Untuk <span id="reqTargetDateLabel"></span></h2>
+        <div class="form-grid">
+          <div>
+            <label>Pilih Sesi (Slot Jam)</label>
+            <select id="slotSelect"></select>
+
+            <label>Keperluan</label>
+            <input type="text" id="keperluanInput" placeholder="CONTOH: KUNJUNGAN NASABAH">
+
+            <label>Nama Nasabah</label>
+            <input type="text" id="nasabahInput" placeholder="CONTOH: PT SUMBER MAKMUR">
+          </div>
+          <div>
+            <label>Lokasi Tujuan</label>
+            <div class="input-with-btn">
+              <input type="text" id="lokasiInput" placeholder="ALAMAT TUJUAN">
+              <button class="btn btn-gps btn-small" id="gpsBtnReq" type="button">📍 GPS</button>
+            </div>
+
+            <label>Penumpang (Opsional)</label>
+            <div class="checkbox-grid" id="passengerGrid"></div>
+          </div>
+        </div>
+        <div style="margin-top:18px;">
+          <button class="btn btn-primary" id="submitBookingBtn">Ajukan Booking</button>
+        </div>
+        <div class="note" id="formNote"></div>
+      </div>
+
+      <div class="panel glass">
+        <h2>Booking Saya</h2>
+        <table>
+          <thead><tr><th>Tanggal</th><th>Sesi</th><th>Keperluan</th><th>Status</th></tr></thead>
+          <tbody id="myBookingsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ADMIN VIEW ============ -->
+  <section class="view" id="view-admin">
+    <div id="adminLogin">
+      <div class="page-title"><h1>Admin Panel</h1></div>
+      <div class="panel glass login-card">
+        <div class="login-title">Masuk Sebagai Admin</div>
+        <div class="login-sub">Akses panel kontrol &amp; override sistem</div>
+        <button class="btn btn-primary btn-block" id="adminLoginBtn">Masuk Sebagai Admin</button>
+      </div>
+    </div>
+
+    <div id="adminApp" style="display:none;">
+      <div class="topbar-session">
+        <div class="session-pill">Login sebagai <b>Admin</b></div>
+        <button class="btn btn-ghost btn-small" id="adminLogoutBtn">Keluar</button>
+      </div>
+
+      <div class="panel glass">
+        <h2>Admin Override — Jendela Request</h2>
+        <p class="note" style="margin-top:0;">Normal: form requester hanya terbuka 17:00–08:30. Gunakan override untuk membuka atau mengunci form secara manual saat darurat.</p>
+        <div class="override-row" id="overrideRow"></div>
+      </div>
+
+      <div class="panel glass">
+        <h2>Buat Sesi Manual (Force Booking)</h2>
+        <p class="note" style="margin-top:0;">Override ini melewati aturan jendela waktu dan anti-monopoli — gunakan hanya untuk kebutuhan darurat. Slot yang sudah terisi tetap tidak bisa ditimpa; batalkan booking lama terlebih dahulu jika perlu.</p>
+        <div class="form-grid">
+          <div>
+            <label>Tanggal</label>
+            <select id="adminDateSelect">
+              <option value="today">Hari Ini</option>
+              <option value="tomorrow">Besok</option>
+            </select>
+            <label>Slot Jam</label>
+            <select id="adminSlotSelect"></select>
+          </div>
+          <div>
+            <label>Atas Nama</label>
+            <select id="adminUserSelect"></select>
+            <label>Keperluan</label>
+            <input type="text" id="adminKeperluanInput" placeholder="KEPERLUAN">
+          </div>
+        </div>
+        <div style="margin-top:14px;"><button class="btn btn-primary" id="adminCreateBtn">Buat Booking Manual</button></div>
+      </div>
+
+      <div class="panel glass">
+        <h2>Semua Booking (Hari Ini &amp; Besok)</h2>
+        <table>
+          <thead><tr><th>Tanggal</th><th>Sesi</th><th>Requester</th><th>Keperluan</th><th>Status</th><th></th></tr></thead>
+          <tbody id="adminBookingsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="glass">© 2026 <b>SRISP</b> — V-BOOK Fleet Reservation System</footer>
+
+<script>
+/* ===================== DATA / CONFIG ===================== */
+const REQUESTERS = ['BM','OM','Novi','Vika'];
+const PASSENGERS = ['OM','Novi','Vica','HFO','AOC','BM','CS','Security','Teller','OB','GUEST'];
+const SLOT_HOURS = [9,10,11,14,15,16,17]; // 12-14 blackout removed
+const DEMO_PASSWORD = '1234';
+
+let now = new Date();
+let bookings = []; // {id, dateKey, startHour, endHour, requester, keperluan, nasabah, lokasi, mapsUrl, penumpang, status, createdAt}
+let bookingSeq = 1;
+
+let session = { requestRole: null, adminLoggedIn: false };
+let overrideMode = 'normal'; // normal | forceOpen | forceClose
+let activeTab = 'board';
+let lastTickerText = null;
+
+/* ===================== TIME HELPERS ===================== */
+function pad(n){ return n.toString().padStart(2,'0'); }
+function startOfDay(d){ const x = new Date(d); x.setHours(0,0,0,0); return x; }
+function dateKeyOf(d){ return startOfDay(d).getTime(); }
+function addDays(d,n){ const x = new Date(d); x.setDate(x.getDate()+n); return x; }
+function fmtDateLabel(d){
+  return d.toLocaleDateString('id-ID',{weekday:'long', day:'numeric', month:'long', year:'numeric'});
+}
+function fmtHM(h,m){ return pad(h)+':'+pad(m===undefined?0:m); }
+
+function isWindowOpenByClock(d){
+  const h = d.getHours(), m = d.getMinutes();
+  if (h >= 17) return true;
+  if (h < 8) return true;
+  if (h === 8 && m < 30) return true;
+  return false;
+}
+function effectiveWindowOpen(){
+  if (overrideMode === 'forceOpen') return true;
+  if (overrideMode === 'forceClose') return false;
+  return isWindowOpenByClock(now);
+}
+function targetBookingDate(){
+  const h = now.getHours(), m = now.getMinutes();
+  const isLateNightToMorning = (h < 8) || (h === 8 && m < 30);
+  if (isLateNightToMorning) return startOfDay(now);
+  if (h >= 17) return startOfDay(addDays(now,1));
+  return startOfDay(now);
+}
+function buildSlotsForDate(date){
+  const dk = dateKeyOf(date);
+  return SLOT_HOURS.map(h => ({ dateKey: dk, startHour:h, endHour:h+1 }));
+}
+function slotStartDate(dateKey, hour){ const d = new Date(dateKey); d.setHours(hour,0,0,0); return d; }
+function slotEndDate(dateKey, hour){ const d = new Date(dateKey); d.setHours(hour+1,0,0,0); return d; }
+
+/* ===================== BOOKING LOGIC ===================== */
+function findBooking(dateKey, hour){
+  return bookings.find(b => b.dateKey===dateKey && b.startHour===hour && b.status!=='CANCELLED');
+}
+function bookingsOf(name, dateKey){
+  return bookings.filter(b => b.requester===name && b.dateKey===dateKey && b.status!=='CANCELLED');
+}
+function isConsecutiveBlocked(name, dateKey, hour){
+  const mine = bookingsOf(name, dateKey);
+  return mine.some(b => b.endHour===hour || b.startHour===hour+1);
+}
+function createBooking(data){
+  const b = Object.assign({ id: bookingSeq++, status:'BOOKED', createdAt: new Date(now) }, data);
+  bookings.push(b);
+  return b;
+}
+
+/* ===================== GPS / MAPS HELPERS ===================== */
+function mapsSearchLink(address){ return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(address); }
+function mapsCoordLink(lat,lng){ return 'https://www.google.com/maps?q=' + lat + ',' + lng; }
+function bindGpsButton(btnId, inputId){
+  document.getElementById(btnId).addEventListener('click', () => {
+    if (!navigator.geolocation){ alert('Perangkat/browser ini tidak mendukung GPS. Isi alamat manual.'); return; }
+    const input = document.getElementById(inputId);
+    input.placeholder = 'MENGAMBIL LOKASI...';
+    navigator.geolocation.getCurrentPosition(pos => {
+      const lat = pos.coords.latitude.toFixed(6), lng = pos.coords.longitude.toFixed(6);
+      input.value = ('LAT ' + lat + ', LNG ' + lng + ' (GPS)').toUpperCase();
+      input.dataset.mapsurl = mapsCoordLink(lat,lng);
+      input.placeholder = 'ALAMAT TUJUAN';
+    }, err => {
+      input.placeholder = 'ALAMAT TUJUAN';
+      alert('Gagal mengambil lokasi GPS. Izinkan akses lokasi pada browser, atau isi alamat manual.');
+    }, { enableHighAccuracy:true, timeout:8000 });
+  });
+}
+
+/* ===================== UPPERCASE-ON-TYPE INPUTS ===================== */
+function bindUppercase(id){
+  const el = document.getElementById(id);
+  el.addEventListener('input', () => { el.value = el.value.toUpperCase(); });
+}
+
+/* ===================== RENDER: HEADER / CLOCK ===================== */
+function renderClock(){
+  document.getElementById('clockTime').textContent = pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds());
+  document.getElementById('clockDate').textContent = fmtDateLabel(now).toUpperCase();
+}
+
+/* ===================== RENDER: TICKER ===================== */
+function renderTicker(){
+  const todayKey = dateKeyOf(now);
+  const slots = buildSlotsForDate(now);
+  const empty = slots.filter(s => {
+    const end = slotEndDate(s.dateKey, s.startHour);
+    const b = findBooking(s.dateKey, s.startHour);
+    return !b && now < end;
+  });
+  let text;
+  if (empty.length === 0){
+    text = 'SEMUA SESI HARI INI SUDAH TERISI — PANTAU PAPAN UNTUK PERUBAHAN STATUS';
+  } else {
+    text = 'SESI KOSONG HARI INI: ' + empty.map(s => fmtHM(s.startHour)+'–'+fmtHM(s.endHour)).join('  •  ');
+  }
+  if (text !== lastTickerText){
+    lastTickerText = text;
+    document.getElementById('tickerTrack').innerHTML = '<span>'+text+'</span><span>'+text+'</span>';
+  }
+}
+
+/* ===================== RENDER: BOARD ===================== */
+function renderBoard(){
+  document.getElementById('boardDateLabel').textContent = fmtDateLabel(now);
+  renderTicker();
+  const grid = document.getElementById('boardGrid');
+  grid.innerHTML = '';
+  const slots = buildSlotsForDate(now);
+
+  slots.forEach(slot => {
+    const start = slotStartDate(slot.dateKey, slot.startHour);
+    const end = slotEndDate(slot.dateKey, slot.startHour);
+    const booking = findBooking(slot.dateKey, slot.startHour);
+
+    const card = document.createElement('div');
+    card.className = 'slot-card glass';
+
+    let statusHtml = '', bodyHtml = '', countdownHtml = '';
+
+    function detailRows(b){
+      let rows = '<span class="req-name">'+escapeHtml(b.requester)+'</span>';
+      rows += fieldRow('TUJUAN', escapeHtml(b.keperluan));
+      if (b.nasabah) rows += fieldRow('NASABAH', escapeHtml(b.nasabah));
+      if (b.lokasi){
+        const link = b.mapsUrl || mapsSearchLink(b.lokasi);
+        rows += fieldRow('LOKASI', '<a class="maps-link" target="_blank" rel="noopener" href="'+link+'">📍 '+escapeHtml(b.lokasi)+'</a>');
+      }
+      if (b.penumpang && b.penumpang.length){
+        rows += '<div class="passenger-chips">'+b.penumpang.map(p=>'<span>'+escapeHtml(p)+'</span>').join('')+'</div>';
+      }
+      return rows;
+    }
+    function fieldRow(lbl, val){ return '<div class="field-row"><span class="lbl">'+lbl+'</span><span>'+val+'</span></div>'; }
+
+    if (booking){
+      if (booking.status === 'CLEARED'){
+        statusHtml = '<span class="dot gray"></span> SELESAI';
+        bodyHtml = detailRows(booking);
+      } else if (now < start){
+        statusHtml = '<span class="dot gold"></span> TERJADWAL';
+        bodyHtml = detailRows(booking);
+      } else if (now >= start && now < end){
+        card.classList.add('is-current');
+        statusHtml = '<span class="dot green blink"></span> ● IN USE';
+        bodyHtml = detailRows(booking);
+        const remain = end - now;
+        countdownHtml = '<div class="slot-countdown gold">SISA '+msToClock(remain)+'</div>';
+      } else {
+        card.classList.add('is-overtime');
+        statusHtml = '<span class="dot red blink"></span> ● OVERTIME';
+        bodyHtml = detailRows(booking);
+        const over = now - end;
+        countdownHtml = '<div class="slot-countdown red">+'+Math.floor(over/60000)+' MENIT</div>';
+      }
+    } else {
+      card.classList.add('empty');
+      if (now >= end){
+        statusHtml = '<span class="dot gray"></span> LEWAT';
+      } else {
+        statusHtml = '<span class="dot green blink"></span> TERSEDIA';
+      }
+      bodyHtml = '<span style="color:var(--text-dim-2)">BELUM ADA BOOKING</span>';
+    }
+
+    card.innerHTML =
+      '<div class="slot-time">'+fmtHM(slot.startHour)+' – '+fmtHM(slot.endHour)+'</div>'+
+      '<div class="slot-status">'+statusHtml+'</div>'+
+      '<div class="slot-body">'+bodyHtml+'</div>'+
+      countdownHtml;
+    grid.appendChild(card);
+  });
+}
+function msToClock(ms){
+  if (ms < 0) ms = 0;
+  const totalSec = Math.floor(ms/1000);
+  const m = Math.floor(totalSec/60), s = totalSec%60;
+  return pad(m)+':'+pad(s);
+}
+function escapeHtml(str){
+  const d = document.createElement('div'); d.textContent = str==null?'':str; return d.innerHTML;
+}
+
+/* ===================== RENDER: REQUEST TAB / LOGIN ===================== */
+function initLoginSelect(){
+  const sel = document.getElementById('loginNameSelect');
+  REQUESTERS.forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name; opt.textContent = name.toUpperCase();
+    sel.appendChild(opt);
+  });
+}
+document.getElementById('loginSubmitBtn').addEventListener('click', () => {
+  const name = document.getElementById('loginNameSelect').value;
+  const pass = document.getElementById('loginPasswordInput').value;
+  const err = document.getElementById('loginError');
+  if (!name || pass !== DEMO_PASSWORD){
+    err.style.display = 'block';
+    return;
+  }
+  err.style.display = 'none';
+  document.getElementById('loginPasswordInput').value = '';
+  session.requestRole = name;
+  renderRequestTab();
+});
+
+function renderRequestTab(){
+  const loggedIn = !!session.requestRole;
+  document.getElementById('requestLogin').style.display = loggedIn ? 'none' : 'block';
+  document.getElementById('requestApp').style.display = loggedIn ? 'block' : 'none';
+  if (!loggedIn) return;
+
+  document.getElementById('reqUserName').textContent = session.requestRole.toUpperCase();
+
+  const windowOpen = effectiveWindowOpen();
+  const banner = document.getElementById('reqStatusBanner');
+  if (overrideMode !== 'normal'){
+    banner.innerHTML = '<div class="status-banner override glass">⚙ ADMIN OVERRIDE AKTIF: '+(overrideMode==='forceOpen' ? 'FORM DIPAKSA TERBUKA' : 'FORM DIPAKSA TERKUNCI')+'</div>';
+  } else if (windowOpen){
+    banner.innerHTML = '<div class="status-banner open glass">● JENDELA REQUEST TERBUKA (17:00–08:30)</div>';
+  } else {
+    banner.innerHTML = '<div class="status-banner closed glass">■ JENDELA REQUEST TERTUTUP — FORM TERKUNCI SAMPAI JAM 17:00</div>';
+  }
+
+  const targetDate = targetBookingDate();
+  const targetKey = dateKeyOf(targetDate);
+  document.getElementById('reqTargetDateLabel').textContent = fmtDateLabel(targetDate);
+
+  const slotSelect = document.getElementById('slotSelect');
+  slotSelect.innerHTML = '';
+  const isTargetToday = targetKey === dateKeyOf(now);
+  const slots = buildSlotsForDate(targetDate).filter(s => !isTargetToday || s.startHour > now.getHours());
+
+  slots.forEach(slot => {
+    const opt = document.createElement('option');
+    const taken = findBooking(slot.dateKey, slot.startHour);
+    const blockedConsecutive = !taken && isConsecutiveBlocked(session.requestRole, slot.dateKey, slot.startHour);
+    let label = fmtHM(slot.startHour)+' – '+fmtHM(slot.endHour);
+    let disabled = false;
+    if (taken){
+      label += taken.requester===session.requestRole ? '  — SUDAH ANDA PESAN' : ('  — SUDAH DIPESAN ('+taken.requester.toUpperCase()+')');
+      disabled = true;
+    } else if (blockedConsecutive){
+      label += '  — TERKUNCI (ANTI-MONOPOLI)';
+      disabled = true;
+    }
+    opt.value = slot.startHour;
+    opt.textContent = label;
+    opt.disabled = disabled;
+    slotSelect.appendChild(opt);
+  });
+  if (slots.length === 0){
+    const opt = document.createElement('option');
+    opt.textContent = 'TIDAK ADA SLOT TERSISA UNTUK TANGGAL INI';
+    opt.disabled = true;
+    slotSelect.appendChild(opt);
+  }
+
+  const pg = document.getElementById('passengerGrid');
+  pg.innerHTML = '';
+  PASSENGERS.forEach(p => {
+    const wrap = document.createElement('label');
+    wrap.className = 'chk-item';
+    wrap.innerHTML = '<input type="checkbox" value="'+p+'"> '+p.toUpperCase();
+    pg.appendChild(wrap);
+  });
+
+  const canSubmit = windowOpen && slots.some(s => !findBooking(s.dateKey,s.startHour) && !isConsecutiveBlocked(session.requestRole,s.dateKey,s.startHour));
+  const submitBtn = document.getElementById('submitBookingBtn');
+  submitBtn.disabled = !canSubmit;
+  document.getElementById('formNote').textContent = !windowOpen
+    ? 'Form terkunci di luar jam request. Hubungi Admin jika ada kebutuhan darurat.'
+    : 'Boleh lebih dari satu sesi per hari, asal tidak berurutan langsung.';
+
+  renderMyBookings();
+}
+
+function renderMyBookings(){
+  const body = document.getElementById('myBookingsBody');
+  body.innerHTML = '';
+  const mine = bookings.filter(b => b.requester === session.requestRole && b.status !== 'CANCELLED')
+    .sort((a,b)=> a.dateKey-b.dateKey || a.startHour-b.startHour);
+  if (mine.length === 0){
+    body.innerHTML = '<tr><td colspan="4" class="empty-state">BELUM ADA BOOKING</td></tr>';
+    return;
+  }
+  mine.forEach(b => {
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td>'+fmtDateLabel(new Date(b.dateKey))+'</td>'+
+      '<td>'+fmtHM(b.startHour)+'–'+fmtHM(b.endHour)+'</td>'+
+      '<td>'+escapeHtml(b.keperluan)+'</td>'+
+      '<td>'+statusBadge(b)+'</td>';
+    body.appendChild(tr);
+  });
+}
+function statusBadge(b){
+  if (b.status==='CLEARED') return '<span class="badge cleared">SELESAI</span>';
+  const start = slotStartDate(b.dateKey,b.startHour), end = slotEndDate(b.dateKey,b.startHour);
+  if (now < start) return '<span class="badge booked">TERJADWAL</span>';
+  if (now < end) return '<span class="badge inuse">IN USE</span>';
+  return '<span class="badge overtime">OVERTIME</span>';
+}
+
+document.getElementById('submitBookingBtn').addEventListener('click', () => {
+  const targetDate = targetBookingDate();
+  const dateKey = dateKeyOf(targetDate);
+  const hour = parseInt(document.getElementById('slotSelect').value,10);
+  if (isNaN(hour)) return;
+  if (findBooking(dateKey,hour)){ alert('Slot ini baru saja diambil user lain.'); renderRequestTab(); return; }
+  if (isConsecutiveBlocked(session.requestRole, dateKey, hour)){ alert('Slot berurutan dengan booking Anda sendiri tidak diperbolehkan.'); renderRequestTab(); return; }
+
+  const lokasiInput = document.getElementById('lokasiInput');
+  const penumpang = Array.from(document.querySelectorAll('#passengerGrid input:checked')).map(i=>i.value);
+  createBooking({
+    dateKey, startHour: hour, endHour: hour+1,
+    requester: session.requestRole,
+    keperluan: document.getElementById('keperluanInput').value.trim(),
+    nasabah: document.getElementById('nasabahInput').value.trim(),
+    lokasi: lokasiInput.value.trim(),
+    mapsUrl: lokasiInput.dataset.mapsurl || null,
+    penumpang
+  });
+  document.getElementById('keperluanInput').value='';
+  document.getElementById('nasabahInput').value='';
+  lokasiInput.value=''; delete lokasiInput.dataset.mapsurl;
+  renderAll();
+});
+
+document.getElementById('reqLogoutBtn').addEventListener('click', () => { session.requestRole=null; renderRequestTab(); });
+
+/* ===================== RENDER: ADMIN TAB ===================== */
+document.getElementById('adminLoginBtn').addEventListener('click', () => { session.adminLoggedIn = true; renderAdminTab(); });
+document.getElementById('adminLogoutBtn').addEventListener('click', () => { session.adminLoggedIn = false; renderAdminTab(); });
+
+function renderAdminTab(){
+  document.getElementById('adminLogin').style.display = session.adminLoggedIn ? 'none' : 'block';
+  document.getElementById('adminApp').style.display = session.adminLoggedIn ? 'block' : 'none';
+  if (!session.adminLoggedIn) return;
+
+  const row = document.getElementById('overrideRow');
+  const opts = [
+    {key:'normal', label:'NORMAL (IKUTI JAM SERVER)'},
+    {key:'forceOpen', label:'FORCE OPEN'},
+    {key:'forceClose', label:'FORCE CLOSE'},
+  ];
+  row.innerHTML = '';
+  opts.forEach(o => {
+    const div = document.createElement('div');
+    let cls = 'override-opt';
+    if (overrideMode === o.key) cls += o.key==='normal' ? ' active-normal' : (o.key==='forceOpen' ? ' active-open':' active-close');
+    div.className = cls;
+    div.textContent = o.label;
+    div.onclick = () => { overrideMode = o.key; renderAll(); };
+    row.appendChild(div);
+  });
+
+  const userSel = document.getElementById('adminUserSelect');
+  if (userSel.options.length === 0){
+    REQUESTERS.forEach(n => { const opt=document.createElement('option'); opt.value=n; opt.textContent=n.toUpperCase(); userSel.appendChild(opt); });
+  }
+  refreshAdminSlotSelect();
+  renderAdminBookingsTable();
+}
+document.getElementById('adminDateSelect').addEventListener('change', refreshAdminSlotSelect);
+function refreshAdminSlotSelect(){
+  const which = document.getElementById('adminDateSelect').value;
+  const date = which==='today' ? startOfDay(now) : startOfDay(addDays(now,1));
+  const dk = dateKeyOf(date);
+  const sel = document.getElementById('adminSlotSelect');
+  sel.innerHTML = '';
+  buildSlotsForDate(date).forEach(slot => {
+    const taken = findBooking(slot.dateKey, slot.startHour);
+    const opt = document.createElement('option');
+    opt.value = slot.startHour;
+    opt.textContent = fmtHM(slot.startHour)+'–'+fmtHM(slot.endHour) + (taken ? ('  — TERISI ('+taken.requester.toUpperCase()+')') : '');
+    opt.disabled = !!taken;
+    sel.appendChild(opt);
+  });
+  sel.dataset.dateKey = dk;
+}
+document.getElementById('adminCreateBtn').addEventListener('click', () => {
+  const which = document.getElementById('adminDateSelect').value;
+  const date = which==='today' ? startOfDay(now) : startOfDay(addDays(now,1));
+  const dk = dateKeyOf(date);
+  const hour = parseInt(document.getElementById('adminSlotSelect').value,10);
+  if (isNaN(hour)) return;
+  if (findBooking(dk,hour)){ alert('Slot sudah terisi. Batalkan booking lama dulu.'); refreshAdminSlotSelect(); return; }
+  createBooking({
+    dateKey: dk, startHour: hour, endHour: hour+1,
+    requester: document.getElementById('adminUserSelect').value,
+    keperluan: document.getElementById('adminKeperluanInput').value.trim().toUpperCase() || '(FORCE BOOKING OLEH ADMIN)',
+    nasabah:'', lokasi:'', mapsUrl:null, penumpang:[]
+  });
+  document.getElementById('adminKeperluanInput').value='';
+  renderAll();
+});
+
+function renderAdminBookingsTable(){
+  const body = document.getElementById('adminBookingsBody');
+  const all = bookings.filter(b=>b.status!=='CANCELLED').sort((a,b)=>a.dateKey-b.dateKey || a.startHour-b.startHour);
+  body.innerHTML = '';
+  if (all.length===0){ body.innerHTML = '<tr><td colspan="6" class="empty-state">BELUM ADA BOOKING</td></tr>'; return; }
+  all.forEach(b => {
+    const tr = document.createElement('tr');
+    const start = slotStartDate(b.dateKey,b.startHour), end = slotEndDate(b.dateKey,b.startHour);
+    const canClear = b.status!=='CLEARED' && now>=start;
+    tr.innerHTML =
+      '<td>'+fmtDateLabel(new Date(b.dateKey))+'</td>'+
+      '<td>'+fmtHM(b.startHour)+'–'+fmtHM(b.endHour)+'</td>'+
+      '<td>'+b.requester.toUpperCase()+'</td>'+
+      '<td>'+escapeHtml(b.keperluan)+'</td>'+
+      '<td>'+statusBadgeAdmin(b,start,end)+'</td>'+
+      '<td style="white-space:nowrap;">'+
+        (canClear ? '<button class="btn btn-ghost btn-small" data-clear="'+b.id+'">SELESAI</button>' : '')+
+        '<button class="btn btn-danger btn-small" data-cancel="'+b.id+'">BATALKAN</button>'+
+      '</td>';
+    body.appendChild(tr);
+  });
+  body.querySelectorAll('[data-clear]').forEach(btn => btn.onclick = () => {
+    const b = bookings.find(x=>x.id==btn.dataset.clear); if(b) b.status='CLEARED'; renderAll();
+  });
+  body.querySelectorAll('[data-cancel]').forEach(btn => btn.onclick = () => {
+    const b = bookings.find(x=>x.id==btn.dataset.cancel); if(b) b.status='CANCELLED'; renderAll();
+  });
+}
+function statusBadgeAdmin(b,start,end){
+  if (b.status==='CLEARED') return '<span class="badge cleared">SELESAI</span>';
+  if (now < start) return '<span class="badge booked">TERJADWAL</span>';
+  if (now < end) return '<span class="badge inuse">IN USE</span>';
+  return '<span class="badge overtime">OVERTIME</span>';
+}
+
+/* ===================== TAB SWITCHING ===================== */
+document.querySelectorAll('nav.tabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    activeTab = btn.dataset.tab;
+    document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b===btn));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.getElementById('view-'+activeTab).classList.add('active');
+    renderAll();
+  });
+});
+
+/* ===================== MASTER RENDER + CLOCK TICK ===================== */
+function renderAll(){
+  renderClock();
+  renderBoard();
+  if (activeTab === 'request') renderRequestTab();
+  if (activeTab === 'admin') renderAdminTab();
+}
+
+/* ===================== INIT ===================== */
+initLoginSelect();
+bindGpsButton('gpsBtnReq','lokasiInput');
+['keperluanInput','nasabahInput','lokasiInput','adminKeperluanInput'].forEach(bindUppercase);
+
+setInterval(() => { now = new Date(); renderAll(); }, 1000);
+renderAll();
+</script>
+</body>
+</html>
