@@ -49,66 +49,62 @@
     box-shadow:0 10px 34px rgba(0,0,0,.28);
   }
 
-  /* ---------- HEADER ---------- */
+  /* ---------- HEADER (compact) ---------- */
   header{
     position:sticky;top:0;z-index:50;
-    border-radius:0 0 18px 18px;
+    border-radius:0 0 14px 14px;
     margin:0 auto;max-width:1180px;
   }
-  header.glass{ border-top:none; }
   .header-inner{
     display:flex;align-items:center;justify-content:space-between;
-    padding:14px 20px;gap:16px;flex-wrap:wrap;
+    padding:8px 16px;gap:12px;flex-wrap:wrap;
   }
-  .brand{display:flex;align-items:center;gap:12px;}
+  .brand{display:flex;align-items:center;gap:9px;}
   .brand-mark{
-    width:42px;height:42px;border-radius:12px;
+    width:30px;height:30px;border-radius:9px;
     background:rgba(255,255,255,.06);
     border:1px solid rgba(217,182,92,.45);
     display:flex;align-items:center;justify-content:center;
     flex-shrink:0;
-    box-shadow:0 0 18px rgba(217,182,92,.18) inset;
   }
-  .brand-mark svg{width:24px;height:24px;}
-  .brand-text .title{font-family:var(--serif);font-weight:700;font-size:18px;letter-spacing:.5px;color:var(--gold-soft);}
-  .brand-text .sub{font-size:10px;color:var(--text-dim);letter-spacing:1.6px;text-transform:uppercase;margin-top:1px;}
+  .brand-mark svg{width:18px;height:18px;}
+  .brand-text .title{font-family:var(--serif);font-weight:700;font-size:14px;letter-spacing:.4px;color:var(--gold-soft);line-height:1.1;}
+  .brand-text .sub{font-size:7.5px;color:var(--text-dim);letter-spacing:1.2px;text-transform:uppercase;margin-top:1px;}
   .clock-box{
     font-family:var(--mono);
-    border-radius:10px;
-    padding:9px 16px;
+    border-radius:8px;
+    padding:5px 11px;
     display:flex;flex-direction:column;align-items:flex-end;
-    line-height:1.1;
+    line-height:1.05;
     background:rgba(0,0,0,.18);
     border:1px solid var(--glass-border);
   }
-  .clock-time{font-size:19px;font-weight:600;letter-spacing:2px;color:var(--gold-soft);}
-  .clock-date{font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-top:2px;text-transform:uppercase;}
+  .clock-time{font-size:14px;font-weight:600;letter-spacing:1.4px;color:var(--gold-soft);}
+  .clock-date{font-size:7px;color:var(--text-dim);letter-spacing:.6px;margin-top:1px;text-transform:uppercase;}
   nav.tabs{
-    display:flex;gap:4px;padding:0 20px;
+    display:flex;gap:2px;padding:0 16px;
     border-top:1px solid rgba(255,255,255,.08);
   }
   nav.tabs button{
     background:none;border:none;color:var(--text-dim);
-    font-family:var(--sans);font-size:12px;font-weight:700;
-    padding:12px 16px;cursor:pointer;
+    font-family:var(--sans);font-size:10.5px;font-weight:700;
+    padding:8px 13px;cursor:pointer;
     border-bottom:2px solid transparent;
-    letter-spacing:1px;text-transform:uppercase;
+    letter-spacing:.8px;text-transform:uppercase;
   }
   nav.tabs button.active{color:var(--gold-soft);border-bottom-color:var(--gold);}
   nav.tabs button:hover{color:var(--text);}
 
-  main{max-width:1180px;margin:0 auto;padding:20px 20px 30px;position:relative;z-index:1;}
+  main{max-width:1180px;margin:0 auto;padding:18px 20px 30px;position:relative;z-index:1;}
   .view{display:none;}
   .view.active{display:block;}
 
   .page-title{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
-  .page-title h1{font-family:var(--serif);font-size:21px;margin:0;font-weight:700;color:var(--text);}
+  .page-title h1{font-family:var(--serif);font-size:20px;margin:0;font-weight:700;color:var(--text);}
   .page-title .meta{font-size:11px;color:var(--text-dim);font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px;}
 
   /* ---------- TICKER ---------- */
-  .ticker{
-    border-radius:30px;padding:10px 0;margin-bottom:14px;overflow:hidden;position:relative;
-  }
+  .ticker{ border-radius:30px;padding:10px 0;margin-bottom:14px;overflow:hidden;position:relative; }
   .ticker-track{
     display:flex;width:max-content;white-space:nowrap;
     animation:tickerScroll 22s linear infinite;
@@ -118,37 +114,19 @@
   @keyframes tickerScroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
 
   .blackout-banner{
-    border-radius:12px;
-    padding:10px 14px;margin-bottom:14px;
+    border-radius:12px;padding:10px 14px;margin-bottom:14px;
     font-size:11px;color:var(--text-dim);font-family:var(--mono);
     display:flex;align-items:center;gap:8px;letter-spacing:.3px;
     background:repeating-linear-gradient(45deg,rgba(255,255,255,.025) 0 10px,rgba(255,255,255,.05) 10px 20px);
   }
 
   /* ---------- BOARD ---------- */
-  .slot-grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
-    gap:12px;
-  }
-  .slot-card{
-    border-radius:16px;
-    padding:15px;
-    position:relative;
-    overflow:hidden;
-    min-height:180px;
-    display:flex;flex-direction:column;
-    transition:border-color .2s;
-  }
+  .slot-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; }
+  .slot-card{ border-radius:16px; padding:15px; position:relative; overflow:hidden; min-height:180px; display:flex;flex-direction:column; transition:border-color .2s; }
   .slot-card.is-current{border-color:rgba(62,219,143,.55);}
   .slot-card.is-overtime{border-color:rgba(255,123,131,.55);}
-  .slot-time{
-    font-family:var(--mono);font-weight:700;font-size:17px;letter-spacing:.5px;color:var(--text);
-  }
-  .slot-status{
-    margin-top:7px;font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
-    display:flex;align-items:center;gap:6px;
-  }
+  .slot-time{ font-family:var(--mono);font-weight:700;font-size:17px;letter-spacing:.5px;color:var(--text); }
+  .slot-status{ margin-top:7px;font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase; display:flex;align-items:center;gap:6px; }
   .dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0;}
   .dot.green{background:var(--green);}
   .dot.gold{background:var(--gold);}
@@ -164,33 +142,25 @@
   .slot-body a.maps-link:hover{color:var(--gold-soft);}
   .passenger-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px;}
   .passenger-chips span{background:rgba(255,255,255,.06);border:1px solid var(--glass-border);border-radius:5px;padding:1px 6px;font-size:9.5px;color:var(--text-dim);}
-  .slot-countdown{
-    margin-top:auto;padding-top:9px;border-top:1px solid rgba(255,255,255,.08);
-    font-family:var(--mono);font-size:13px;font-weight:600;
-  }
+  .slot-countdown{ margin-top:auto;padding-top:9px;border-top:1px solid rgba(255,255,255,.08); font-family:var(--mono);font-size:13px;font-weight:600; }
   .slot-countdown.red{color:var(--red);}
   .slot-countdown.gold{color:var(--gold);}
   .slot-card.empty .slot-status{color:var(--text-dim-2);}
 
   @media (max-width:700px){
-    .slot-grid{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:8px;flex-wrap:nowrap;}
-    .slot-card{min-width:80vw;flex:0 0 auto;scroll-snap-align:start;}
+    .slot-grid{grid-template-columns:1fr;}
   }
 
   /* ---------- PANELS / FORMS ---------- */
   .panel{ border-radius:18px; padding:20px;margin-bottom:16px; }
   .panel h2{margin:0 0 13px;font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.6px;}
   .login-card{max-width:380px;margin:0 auto;}
-  .login-card .brand-mark{width:54px;height:54px;margin:0 auto 14px;}
-  .login-card .brand-mark svg{width:30px;height:30px;}
+  .login-card .brand-mark{width:50px;height:50px;margin:0 auto 14px;}
+  .login-card .brand-mark svg{width:28px;height:28px;}
   .login-title{text-align:center;font-family:var(--serif);font-size:19px;color:var(--gold-soft);margin-bottom:4px;}
   .login-sub{text-align:center;font-size:11px;color:var(--text-dim);margin-bottom:20px;letter-spacing:.3px;}
 
-  .status-banner{
-    display:flex;align-items:center;gap:10px;
-    padding:11px 14px;border-radius:12px;margin-bottom:16px;
-    font-size:11.5px;font-family:var(--mono);font-weight:600;letter-spacing:.3px;
-  }
+  .status-banner{ display:flex;align-items:center;gap:10px; padding:11px 14px;border-radius:12px;margin-bottom:16px; font-size:11.5px;font-family:var(--mono);font-weight:600;letter-spacing:.3px; }
   .status-banner.open{background:rgba(62,219,143,.08);border:1px solid rgba(62,219,143,.3);color:var(--green);}
   .status-banner.closed{background:rgba(255,123,131,.08);border:1px solid rgba(255,123,131,.3);color:var(--red);}
   .status-banner.override{background:rgba(111,179,255,.08);border:1px solid rgba(111,179,255,.3);color:var(--blue);}
@@ -210,15 +180,9 @@
   .input-with-btn{display:flex;gap:8px;}
   .input-with-btn input{flex:1;}
   .checkbox-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:6px;}
-  .chk-item{
-    display:flex;align-items:center;gap:7px;background:rgba(0,0,0,.18);
-    border:1px solid var(--glass-border);border-radius:8px;padding:8px 10px;font-size:11.5px;
-  }
+  .chk-item{ display:flex;align-items:center;gap:7px;background:rgba(0,0,0,.18); border:1px solid var(--glass-border);border-radius:8px;padding:8px 10px;font-size:11.5px; }
   .chk-item input{accent-color:var(--gold);}
-  .btn{
-    border:none;border-radius:10px;padding:11px 18px;font-weight:700;font-size:12.5px;
-    cursor:pointer;font-family:var(--sans);letter-spacing:.5px;text-transform:uppercase;
-  }
+  .btn{ border:none;border-radius:10px;padding:11px 18px;font-weight:700;font-size:12.5px; cursor:pointer;font-family:var(--sans);letter-spacing:.5px;text-transform:uppercase; }
   .btn-primary{background:linear-gradient(135deg,var(--gold-soft),var(--gold));color:#231904;}
   .btn-primary:disabled{background:rgba(255,255,255,.08);color:var(--text-dim-2);cursor:not-allowed;}
   .btn-ghost{background:rgba(255,255,255,.04);border:1px solid var(--glass-border);color:var(--text-dim);}
@@ -228,19 +192,13 @@
   .btn-small{padding:7px 11px;font-size:10.5px;border-radius:8px;}
   .btn-block{width:100%;}
   .topbar-session{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
-  .session-pill{
-    font-family:var(--mono);font-size:11.5px;border-radius:20px;padding:6px 14px;
-    background:rgba(255,255,255,.05);border:1px solid var(--glass-border);
-  }
+  .session-pill{ font-family:var(--mono);font-size:11.5px;border-radius:20px;padding:6px 14px; background:rgba(255,255,255,.05);border:1px solid var(--glass-border); }
   .session-pill b{color:var(--gold-soft);}
   .login-error{color:var(--red);font-size:11.5px;margin-top:10px;text-align:center;display:none;}
   .login-hint{font-size:10.5px;color:var(--text-dim-2);margin-top:14px;text-align:center;}
 
   table{width:100%;border-collapse:collapse;font-size:11.5px;}
-  th{
-    text-align:left;color:var(--text-dim);font-weight:700;font-size:10px;
-    letter-spacing:.6px;padding:8px 10px;border-bottom:1px solid var(--glass-border);text-transform:uppercase;
-  }
+  th{ text-align:left;color:var(--text-dim);font-weight:700;font-size:10px; letter-spacing:.6px;padding:8px 10px;border-bottom:1px solid var(--glass-border);text-transform:uppercase; }
   td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.06);vertical-align:top;}
   tr:hover td{background:rgba(255,255,255,.02);}
   .badge{font-family:var(--mono);font-size:9.5px;font-weight:700;padding:3px 7px;border-radius:6px;letter-spacing:.4px;}
@@ -250,11 +208,7 @@
   .badge.cleared{background:rgba(255,255,255,.08);color:var(--text-dim);}
 
   .override-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
-  .override-opt{
-    flex:1;min-width:140px;border:1px solid var(--glass-border);background:rgba(255,255,255,.03);
-    border-radius:10px;padding:11px;cursor:pointer;text-align:center;font-size:11.5px;font-weight:700;
-    text-transform:uppercase;letter-spacing:.4px;
-  }
+  .override-opt{ flex:1;min-width:140px;border:1px solid var(--glass-border);background:rgba(255,255,255,.03); border-radius:10px;padding:11px;cursor:pointer;text-align:center;font-size:11.5px;font-weight:700; text-transform:uppercase;letter-spacing:.4px; }
   .override-opt.active-normal{border-color:rgba(255,255,255,.4);color:var(--text);}
   .override-opt.active-open{border-color:var(--green);color:var(--green);background:rgba(62,219,143,.08);}
   .override-opt.active-close{border-color:var(--red);color:var(--red);background:rgba(255,123,131,.08);}
@@ -264,9 +218,15 @@
   .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;}
   @media (max-width:600px){.form-grid{grid-template-columns:1fr;}}
 
+  .pwd-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+  .pwd-row .pwd-name{width:64px;font-weight:700;color:var(--gold-soft);font-size:11.5px;text-transform:uppercase;flex-shrink:0;}
+  .pwd-row input{flex:1;min-width:120px;}
+  .log-scroll{max-height:320px;overflow-y:auto;}
+
   footer{
     max-width:1180px;margin:14px auto 24px;padding:14px 20px;border-radius:16px;
     text-align:center;font-size:10.5px;color:var(--text-dim-2);letter-spacing:.6px;position:relative;z-index:1;
+    cursor:pointer;user-select:none;
   }
   footer b{color:var(--gold-soft);}
 </style>
@@ -278,14 +238,12 @@
     <div class="brand">
       <div class="brand-mark">
         <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="24" cy="24" r="19" stroke="#D9B65C" stroke-width="2.2"/>
-          <circle cx="24" cy="24" r="4.2" fill="#D9B65C"/>
-          <path d="M24 5V14" stroke="#D9B65C" stroke-width="2.2" stroke-linecap="round"/>
-          <path d="M24 34V43" stroke="#D9B65C" stroke-width="2.2" stroke-linecap="round"/>
-          <path d="M9.5 13L16.5 19.5" stroke="#D9B65C" stroke-width="2.2" stroke-linecap="round"/>
-          <path d="M38.5 35L31.5 28.5" stroke="#D9B65C" stroke-width="2.2" stroke-linecap="round"/>
-          <path d="M9.5 35L16.5 28.5" stroke="#D9B65C" stroke-width="2.2" stroke-linecap="round"/>
-          <path d="M38.5 13L31.5 19.5" stroke="#D9B65C" stroke-width="2.2" stroke-linecap="round"/>
+          <circle cx="24" cy="24" r="18" stroke="#D9B65C" stroke-width="2.4"/>
+          <circle cx="24" cy="24" r="5" stroke="#D9B65C" stroke-width="1.6" fill="none"/>
+          <circle cx="24" cy="24" r="2" fill="#D9B65C"/>
+          <line x1="24" y1="19" x2="24" y2="6" stroke="#D9B65C" stroke-width="3.4" stroke-linecap="round"/>
+          <line x1="28.33" y1="26.5" x2="39.59" y2="33" stroke="#D9B65C" stroke-width="3.4" stroke-linecap="round"/>
+          <line x1="19.67" y1="26.5" x2="8.41" y2="33" stroke="#D9B65C" stroke-width="3.4" stroke-linecap="round"/>
         </svg>
       </div>
       <div class="brand-text">
@@ -301,7 +259,6 @@
   <nav class="tabs">
     <button data-tab="board" class="active">Pusat Kendali Armada</button>
     <button data-tab="request">Request</button>
-    <button data-tab="admin">Admin</button>
   </nav>
 </header>
 
@@ -327,10 +284,12 @@
       <div class="panel glass login-card">
         <div class="brand-mark" style="border-color:rgba(217,182,92,.45);">
           <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="24" cy="24" r="19" stroke="#D9B65C" stroke-width="2.2"/>
-            <circle cx="24" cy="24" r="4.2" fill="#D9B65C"/>
-            <path d="M24 5V14" stroke="#D9B65C" stroke-width="2.2" stroke-linecap="round"/>
-            <path d="M24 34V43" stroke="#D9B65C" stroke-width="2.2" stroke-linecap="round"/>
+            <circle cx="24" cy="24" r="18" stroke="#D9B65C" stroke-width="2.4"/>
+            <circle cx="24" cy="24" r="5" stroke="#D9B65C" stroke-width="1.6" fill="none"/>
+            <circle cx="24" cy="24" r="2" fill="#D9B65C"/>
+            <line x1="24" y1="19" x2="24" y2="6" stroke="#D9B65C" stroke-width="3.4" stroke-linecap="round"/>
+            <line x1="28.33" y1="26.5" x2="39.59" y2="33" stroke="#D9B65C" stroke-width="3.4" stroke-linecap="round"/>
+            <line x1="19.67" y1="26.5" x2="8.41" y2="33" stroke="#D9B65C" stroke-width="3.4" stroke-linecap="round"/>
           </svg>
         </div>
         <div class="login-title">Masuk Sebagai Requester</div>
@@ -343,7 +302,7 @@
         <input type="password" id="loginPasswordInput" placeholder="••••">
         <div style="margin-top:18px;"><button class="btn btn-primary btn-block" id="loginSubmitBtn">Masuk</button></div>
         <div class="login-error" id="loginError">Nama atau password salah.</div>
-        <div class="login-hint">Demo password untuk semua akun: <b style="color:var(--text-dim)">1234</b></div>
+        <div class="login-hint">Demo password awal untuk semua akun: <b style="color:var(--text-dim)">1234</b> — admin dapat mengubahnya di panel Admin.</div>
       </div>
     </div>
 
@@ -394,14 +353,18 @@
     </div>
   </section>
 
-  <!-- ============ ADMIN VIEW ============ -->
+  <!-- ============ ADMIN VIEW (hidden entry — diakses via klik copyright) ============ -->
   <section class="view" id="view-admin">
     <div id="adminLogin">
       <div class="page-title"><h1>Admin Panel</h1></div>
       <div class="panel glass login-card">
-        <div class="login-title">Masuk Sebagai Admin</div>
-        <div class="login-sub">Akses panel kontrol &amp; override sistem</div>
-        <button class="btn btn-primary btn-block" id="adminLoginBtn">Masuk Sebagai Admin</button>
+        <div class="login-title">Akses Admin</div>
+        <div class="login-sub">Masukkan password admin</div>
+        <label>Password</label>
+        <input type="password" id="adminPasswordInput" placeholder="••••••••">
+        <div style="margin-top:18px;"><button class="btn btn-primary btn-block" id="adminLoginBtn">Masuk</button></div>
+        <div class="login-error" id="adminLoginError">Password salah.</div>
+        <div class="login-hint">Demo: <b style="color:var(--text-dim)">admin2026</b> — setelah terhubung ke Firebase, password ini divalidasi melalui Firebase Authentication.</div>
       </div>
     </div>
 
@@ -419,7 +382,7 @@
 
       <div class="panel glass">
         <h2>Buat Sesi Manual (Force Booking)</h2>
-        <p class="note" style="margin-top:0;">Override ini melewati aturan jendela waktu dan anti-monopoli — gunakan hanya untuk kebutuhan darurat. Slot yang sudah terisi tetap tidak bisa ditimpa; batalkan booking lama terlebih dahulu jika perlu.</p>
+        <p class="note" style="margin-top:0;">Override ini melewati aturan jendela waktu dan kebijakan pemerataan pemakaian — gunakan hanya untuk kebutuhan darurat. Slot yang sudah terisi tetap tidak bisa ditimpa; batalkan booking lama terlebih dahulu jika perlu.</p>
         <div class="form-grid">
           <div>
             <label>Tanggal</label>
@@ -441,44 +404,64 @@
       </div>
 
       <div class="panel glass">
+        <h2>Kelola Password Requester</h2>
+        <p class="note" style="margin-top:0;">Reset password akun requester jika lupa atau perlu diganti.</p>
+        <div id="pwdManageWrap"></div>
+      </div>
+
+      <div class="panel glass">
         <h2>Semua Booking (Hari Ini &amp; Besok)</h2>
         <table>
           <thead><tr><th>Tanggal</th><th>Sesi</th><th>Requester</th><th>Keperluan</th><th>Status</th><th></th></tr></thead>
           <tbody id="adminBookingsBody"></tbody>
         </table>
       </div>
+
+      <div class="panel glass">
+        <h2>Log Aktivitas</h2>
+        <p class="note" style="margin-top:0;">Riwayat login &amp; aktivitas request, terbaru di atas.</p>
+        <div class="log-scroll">
+          <table>
+            <thead><tr><th>Waktu</th><th>Nama</th><th>Aktivitas</th><th>Detail</th></tr></thead>
+            <tbody id="activityLogBody"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </section>
 
 </main>
 
-<footer class="glass">© 2026 <b>SRISP</b> — V-BOOK Fleet Reservation System</footer>
+<footer class="glass" id="footerCopyright">© 2026 <b>SRISP</b> — V-BOOK Fleet Reservation System</footer>
 
 <script>
 /* ===================== DATA / CONFIG ===================== */
 const REQUESTERS = ['BM','OM','Novi','Vika'];
 const PASSENGERS = ['OM','Novi','Vica','HFO','AOC','BM','CS','Security','Teller','OB','GUEST'];
 const SLOT_HOURS = [9,10,11,14,15,16,17]; // 12-14 blackout removed
-const DEMO_PASSWORD = '1234';
+
+let passwords = { BM:'1234', OM:'1234', Novi:'1234', Vika:'1234' };
+let adminPassword = 'admin2026'; // demo — di produksi divalidasi via Firebase Authentication
 
 let now = new Date();
-let bookings = []; // {id, dateKey, startHour, endHour, requester, keperluan, nasabah, lokasi, mapsUrl, penumpang, status, createdAt}
+let bookings = [];
 let bookingSeq = 1;
+let activityLog = [];
 
 let session = { requestRole: null, adminLoggedIn: false };
 let overrideMode = 'normal'; // normal | forceOpen | forceClose
 let activeTab = 'board';
 let lastTickerText = null;
+let reqSlotSig = null; // cache signature to avoid rebuilding slot <select> every tick
 
 /* ===================== TIME HELPERS ===================== */
 function pad(n){ return n.toString().padStart(2,'0'); }
 function startOfDay(d){ const x = new Date(d); x.setHours(0,0,0,0); return x; }
 function dateKeyOf(d){ return startOfDay(d).getTime(); }
 function addDays(d,n){ const x = new Date(d); x.setDate(x.getDate()+n); return x; }
-function fmtDateLabel(d){
-  return d.toLocaleDateString('id-ID',{weekday:'long', day:'numeric', month:'long', year:'numeric'});
-}
+function fmtDateLabel(d){ return d.toLocaleDateString('id-ID',{weekday:'long', day:'numeric', month:'long', year:'numeric'}); }
 function fmtHM(h,m){ return pad(h)+':'+pad(m===undefined?0:m); }
+function fmtDateTime(d){ return fmtDateLabel(d)+' — '+pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds()); }
 
 function isWindowOpenByClock(d){
   const h = d.getHours(), m = d.getMinutes();
@@ -506,6 +489,12 @@ function buildSlotsForDate(date){
 function slotStartDate(dateKey, hour){ const d = new Date(dateKey); d.setHours(hour,0,0,0); return d; }
 function slotEndDate(dateKey, hour){ const d = new Date(dateKey); d.setHours(hour+1,0,0,0); return d; }
 
+/* ===================== ACTIVITY LOG ===================== */
+function logActivity(actor, action, detail){
+  activityLog.unshift({ time:new Date(now), actor, action, detail: detail||'-' });
+  if (activityLog.length > 200) activityLog.pop();
+}
+
 /* ===================== BOOKING LOGIC ===================== */
 function findBooking(dateKey, hour){
   return bookings.find(b => b.dateKey===dateKey && b.startHour===hour && b.status!=='CANCELLED');
@@ -522,24 +511,39 @@ function createBooking(data){
   bookings.push(b);
   return b;
 }
+function bookingsSignature(){
+  return bookings.map(b=>b.id+':'+b.status).join(',');
+}
 
 /* ===================== GPS / MAPS HELPERS ===================== */
 function mapsSearchLink(address){ return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(address); }
 function mapsCoordLink(lat,lng){ return 'https://www.google.com/maps?q=' + lat + ',' + lng; }
 function bindGpsButton(btnId, inputId){
   document.getElementById(btnId).addEventListener('click', () => {
-    if (!navigator.geolocation){ alert('Perangkat/browser ini tidak mendukung GPS. Isi alamat manual.'); return; }
+    if (!window.isSecureContext){
+      alert('GPS hanya berfungsi pada koneksi HTTPS. Saat di-deploy ke GitHub Pages, koneksi otomatis HTTPS dan GPS akan berfungsi. Untuk saat ini, isi alamat manual.');
+      return;
+    }
+    if (!navigator.geolocation){
+      alert('Perangkat/browser ini tidak mendukung GPS. Isi alamat manual.');
+      return;
+    }
     const input = document.getElementById(inputId);
+    const oldPlaceholder = input.placeholder;
     input.placeholder = 'MENGAMBIL LOKASI...';
     navigator.geolocation.getCurrentPosition(pos => {
       const lat = pos.coords.latitude.toFixed(6), lng = pos.coords.longitude.toFixed(6);
       input.value = ('LAT ' + lat + ', LNG ' + lng + ' (GPS)').toUpperCase();
       input.dataset.mapsurl = mapsCoordLink(lat,lng);
-      input.placeholder = 'ALAMAT TUJUAN';
+      input.placeholder = oldPlaceholder;
     }, err => {
-      input.placeholder = 'ALAMAT TUJUAN';
-      alert('Gagal mengambil lokasi GPS. Izinkan akses lokasi pada browser, atau isi alamat manual.');
-    }, { enableHighAccuracy:true, timeout:8000 });
+      input.placeholder = oldPlaceholder;
+      let msg = 'Gagal mengambil lokasi GPS. Isi alamat manual.';
+      if (err && err.code === 1) msg = 'Izin lokasi ditolak. Aktifkan izin lokasi untuk browser ini di pengaturan HP/browser, lalu coba lagi — atau isi alamat manual.';
+      else if (err && err.code === 2) msg = 'Lokasi tidak dapat dideteksi. Pastikan GPS HP aktif dan sinyal cukup, atau isi alamat manual.';
+      else if (err && err.code === 3) msg = 'Permintaan lokasi GPS time-out. Coba lagi, atau isi alamat manual.';
+      alert(msg);
+    }, { enableHighAccuracy:true, timeout:8000, maximumAge:0 });
   });
 }
 
@@ -557,7 +561,6 @@ function renderClock(){
 
 /* ===================== RENDER: TICKER ===================== */
 function renderTicker(){
-  const todayKey = dateKeyOf(now);
   const slots = buildSlotsForDate(now);
   const empty = slots.filter(s => {
     const end = slotEndDate(s.dateKey, s.startHour);
@@ -576,75 +579,117 @@ function renderTicker(){
   }
 }
 
-/* ===================== RENDER: BOARD ===================== */
+/* ===================== RENDER: BOARD (diff-based, no full rebuild every tick) ===================== */
+let boardBuiltDateKey = null;
+let boardCardRefs = {}; // hour -> {root, statusEl, bodyEl, countdownEl}
+let boardCardStateKey = {}; // hour -> string signature of the last rendered state
+
+function detailRows(b){
+  let rows = '<span class="req-name">'+escapeHtml(b.requester)+'</span>';
+  rows += fieldRow('TUJUAN', escapeHtml(b.keperluan));
+  if (b.nasabah) rows += fieldRow('NASABAH', escapeHtml(b.nasabah));
+  if (b.lokasi){
+    const link = b.mapsUrl || mapsSearchLink(b.lokasi);
+    rows += fieldRow('LOKASI', '<a class="maps-link" target="_blank" rel="noopener" href="'+link+'">📍 '+escapeHtml(b.lokasi)+'</a>');
+  }
+  if (b.penumpang && b.penumpang.length){
+    rows += '<div class="passenger-chips">'+b.penumpang.map(p=>'<span>'+escapeHtml(p)+'</span>').join('')+'</div>';
+  }
+  return rows;
+}
+function fieldRow(lbl, val){ return '<div class="field-row"><span class="lbl">'+lbl+'</span><span>'+val+'</span></div>'; }
+
+function ensureBoardCards(){
+  const todayKey = dateKeyOf(now);
+  if (boardBuiltDateKey === todayKey) return;
+  boardBuiltDateKey = todayKey;
+  boardCardRefs = {};
+  boardCardStateKey = {};
+  const grid = document.getElementById('boardGrid');
+  grid.innerHTML = '';
+  buildSlotsForDate(now).forEach(slot => {
+    const card = document.createElement('div');
+    card.className = 'slot-card glass';
+    card.innerHTML =
+      '<div class="slot-time">'+fmtHM(slot.startHour)+' – '+fmtHM(slot.endHour)+'</div>'+
+      '<div class="slot-status"></div>'+
+      '<div class="slot-body"></div>'+
+      '<div class="slot-countdown"></div>';
+    grid.appendChild(card);
+    boardCardRefs[slot.startHour] = {
+      root: card,
+      statusEl: card.querySelector('.slot-status'),
+      bodyEl: card.querySelector('.slot-body'),
+      countdownEl: card.querySelector('.slot-countdown')
+    };
+  });
+}
+
 function renderBoard(){
   document.getElementById('boardDateLabel').textContent = fmtDateLabel(now);
   renderTicker();
-  const grid = document.getElementById('boardGrid');
-  grid.innerHTML = '';
-  const slots = buildSlotsForDate(now);
+  ensureBoardCards();
 
-  slots.forEach(slot => {
-    const start = slotStartDate(slot.dateKey, slot.startHour);
-    const end = slotEndDate(slot.dateKey, slot.startHour);
-    const booking = findBooking(slot.dateKey, slot.startHour);
+  buildSlotsForDate(now).forEach(slot => {
+    const hour = slot.startHour;
+    const start = slotStartDate(slot.dateKey, hour);
+    const end = slotEndDate(slot.dateKey, hour);
+    const booking = findBooking(slot.dateKey, hour);
+    const refs = boardCardRefs[hour];
 
-    const card = document.createElement('div');
-    card.className = 'slot-card glass';
-
-    let statusHtml = '', bodyHtml = '', countdownHtml = '';
-
-    function detailRows(b){
-      let rows = '<span class="req-name">'+escapeHtml(b.requester)+'</span>';
-      rows += fieldRow('TUJUAN', escapeHtml(b.keperluan));
-      if (b.nasabah) rows += fieldRow('NASABAH', escapeHtml(b.nasabah));
-      if (b.lokasi){
-        const link = b.mapsUrl || mapsSearchLink(b.lokasi);
-        rows += fieldRow('LOKASI', '<a class="maps-link" target="_blank" rel="noopener" href="'+link+'">📍 '+escapeHtml(b.lokasi)+'</a>');
-      }
-      if (b.penumpang && b.penumpang.length){
-        rows += '<div class="passenger-chips">'+b.penumpang.map(p=>'<span>'+escapeHtml(p)+'</span>').join('')+'</div>';
-      }
-      return rows;
-    }
-    function fieldRow(lbl, val){ return '<div class="field-row"><span class="lbl">'+lbl+'</span><span>'+val+'</span></div>'; }
-
+    let phase, countdownText = '', countdownClass = '';
     if (booking){
-      if (booking.status === 'CLEARED'){
+      if (booking.status === 'CLEARED') phase = 'CLEARED';
+      else if (now < start) phase = 'SCHEDULED';
+      else if (now < end) phase = 'INUSE';
+      else phase = 'OVERTIME';
+    } else {
+      phase = now >= end ? 'PAST' : 'EMPTY';
+    }
+    const stateKey = phase + ':' + (booking ? booking.id : '0') + ':' + (booking ? booking.status : '');
+
+    if (boardCardStateKey[hour] !== stateKey){
+      boardCardStateKey[hour] = stateKey;
+      refs.root.classList.remove('is-current','is-overtime','empty');
+      let statusHtml = '', bodyHtml = '';
+      if (phase === 'CLEARED'){
         statusHtml = '<span class="dot gray"></span> SELESAI';
         bodyHtml = detailRows(booking);
-      } else if (now < start){
+      } else if (phase === 'SCHEDULED'){
         statusHtml = '<span class="dot gold"></span> TERJADWAL';
         bodyHtml = detailRows(booking);
-      } else if (now >= start && now < end){
-        card.classList.add('is-current');
+      } else if (phase === 'INUSE'){
+        refs.root.classList.add('is-current');
         statusHtml = '<span class="dot green blink"></span> ● IN USE';
         bodyHtml = detailRows(booking);
-        const remain = end - now;
-        countdownHtml = '<div class="slot-countdown gold">SISA '+msToClock(remain)+'</div>';
-      } else {
-        card.classList.add('is-overtime');
+      } else if (phase === 'OVERTIME'){
+        refs.root.classList.add('is-overtime');
         statusHtml = '<span class="dot red blink"></span> ● OVERTIME';
         bodyHtml = detailRows(booking);
-        const over = now - end;
-        countdownHtml = '<div class="slot-countdown red">+'+Math.floor(over/60000)+' MENIT</div>';
-      }
-    } else {
-      card.classList.add('empty');
-      if (now >= end){
+      } else if (phase === 'PAST'){
         statusHtml = '<span class="dot gray"></span> LEWAT';
+        refs.root.classList.add('empty');
       } else {
         statusHtml = '<span class="dot green blink"></span> TERSEDIA';
+        refs.root.classList.add('empty');
+        bodyHtml = '<span style="color:var(--text-dim-2)">BELUM ADA BOOKING</span>';
       }
-      bodyHtml = '<span style="color:var(--text-dim-2)">BELUM ADA BOOKING</span>';
+      refs.statusEl.innerHTML = statusHtml;
+      refs.bodyEl.innerHTML = bodyHtml;
     }
 
-    card.innerHTML =
-      '<div class="slot-time">'+fmtHM(slot.startHour)+' – '+fmtHM(slot.endHour)+'</div>'+
-      '<div class="slot-status">'+statusHtml+'</div>'+
-      '<div class="slot-body">'+bodyHtml+'</div>'+
-      countdownHtml;
-    grid.appendChild(card);
+    // countdown text is patched every tick without touching the rest of the card (no flicker)
+    if (phase === 'INUSE'){
+      countdownText = 'SISA ' + msToClock(end - now);
+      countdownClass = 'slot-countdown gold';
+    } else if (phase === 'OVERTIME'){
+      countdownText = '+' + Math.floor((now - end)/60000) + ' MENIT';
+      countdownClass = 'slot-countdown red';
+    } else {
+      countdownClass = 'slot-countdown';
+    }
+    if (refs.countdownEl.textContent !== countdownText) refs.countdownEl.textContent = countdownText;
+    if (refs.countdownEl.className !== countdownClass) refs.countdownEl.className = countdownClass;
   });
 }
 function msToClock(ms){
@@ -666,17 +711,30 @@ function initLoginSelect(){
     sel.appendChild(opt);
   });
 }
+function buildPassengerGrid(){
+  const pg = document.getElementById('passengerGrid');
+  pg.innerHTML = '';
+  PASSENGERS.forEach(p => {
+    const wrap = document.createElement('label');
+    wrap.className = 'chk-item';
+    wrap.innerHTML = '<input type="checkbox" value="'+p+'"> '+p.toUpperCase();
+    pg.appendChild(wrap);
+  });
+}
 document.getElementById('loginSubmitBtn').addEventListener('click', () => {
   const name = document.getElementById('loginNameSelect').value;
   const pass = document.getElementById('loginPasswordInput').value;
   const err = document.getElementById('loginError');
-  if (!name || pass !== DEMO_PASSWORD){
+  if (!name || pass !== passwords[name]){
     err.style.display = 'block';
     return;
   }
   err.style.display = 'none';
   document.getElementById('loginPasswordInput').value = '';
   session.requestRole = name;
+  reqSlotSig = null;
+  buildPassengerGrid();
+  logActivity(name, 'LOGIN REQUESTER', 'Berhasil login ke form request');
   renderRequestTab();
 });
 
@@ -690,72 +748,81 @@ function renderRequestTab(){
 
   const windowOpen = effectiveWindowOpen();
   const banner = document.getElementById('reqStatusBanner');
+  let bannerHtml;
   if (overrideMode !== 'normal'){
-    banner.innerHTML = '<div class="status-banner override glass">⚙ ADMIN OVERRIDE AKTIF: '+(overrideMode==='forceOpen' ? 'FORM DIPAKSA TERBUKA' : 'FORM DIPAKSA TERKUNCI')+'</div>';
+    bannerHtml = '<div class="status-banner override glass">⚙ ADMIN OVERRIDE AKTIF: '+(overrideMode==='forceOpen' ? 'FORM DIPAKSA TERBUKA' : 'FORM DIPAKSA TERKUNCI')+'</div>';
   } else if (windowOpen){
-    banner.innerHTML = '<div class="status-banner open glass">● JENDELA REQUEST TERBUKA (17:00–08:30)</div>';
+    bannerHtml = '<div class="status-banner open glass">● JENDELA REQUEST TERBUKA (17:00–08:30)</div>';
   } else {
-    banner.innerHTML = '<div class="status-banner closed glass">■ JENDELA REQUEST TERTUTUP — FORM TERKUNCI SAMPAI JAM 17:00</div>';
+    bannerHtml = '<div class="status-banner closed glass">■ JENDELA REQUEST TERTUTUP — FORM TERKUNCI SAMPAI JAM 17:00</div>';
   }
+  if (banner.dataset.cache !== bannerHtml){ banner.dataset.cache = bannerHtml; banner.innerHTML = bannerHtml; }
 
   const targetDate = targetBookingDate();
   const targetKey = dateKeyOf(targetDate);
   document.getElementById('reqTargetDateLabel').textContent = fmtDateLabel(targetDate);
 
-  const slotSelect = document.getElementById('slotSelect');
-  slotSelect.innerHTML = '';
+  // only rebuild the slot <select> when something that actually changes its options changes
+  // (prevents the dropdown from flickering/resetting on every 1-second clock tick)
   const isTargetToday = targetKey === dateKeyOf(now);
-  const slots = buildSlotsForDate(targetDate).filter(s => !isTargetToday || s.startHour > now.getHours());
+  const hourGate = isTargetToday ? now.getHours() : -1;
+  const sig = targetKey+'|'+hourGate+'|'+bookingsSignature()+'|'+session.requestRole;
 
-  slots.forEach(slot => {
-    const opt = document.createElement('option');
-    const taken = findBooking(slot.dateKey, slot.startHour);
-    const blockedConsecutive = !taken && isConsecutiveBlocked(session.requestRole, slot.dateKey, slot.startHour);
-    let label = fmtHM(slot.startHour)+' – '+fmtHM(slot.endHour);
-    let disabled = false;
-    if (taken){
-      label += taken.requester===session.requestRole ? '  — SUDAH ANDA PESAN' : ('  — SUDAH DIPESAN ('+taken.requester.toUpperCase()+')');
-      disabled = true;
-    } else if (blockedConsecutive){
-      label += '  — TERKUNCI (ANTI-MONOPOLI)';
-      disabled = true;
+  let slots = buildSlotsForDate(targetDate).filter(s => !isTargetToday || s.startHour > now.getHours());
+
+  if (sig !== reqSlotSig){
+    reqSlotSig = sig;
+    const slotSelect = document.getElementById('slotSelect');
+    const prevValue = slotSelect.value;
+    slotSelect.innerHTML = '';
+    slots.forEach(slot => {
+      const opt = document.createElement('option');
+      const taken = findBooking(slot.dateKey, slot.startHour);
+      const blockedConsecutive = !taken && isConsecutiveBlocked(session.requestRole, slot.dateKey, slot.startHour);
+      let label = fmtHM(slot.startHour)+' – '+fmtHM(slot.endHour);
+      let disabled = false;
+      if (taken){
+        label += taken.requester===session.requestRole ? '  — SUDAH ANDA PESAN' : ('  — SUDAH DIPESAN ('+taken.requester.toUpperCase()+')');
+        disabled = true;
+      } else if (blockedConsecutive){
+        label += '  — TERKUNCI (JEDA ROTASI PEMAKAIAN)';
+        disabled = true;
+      }
+      opt.value = slot.startHour;
+      opt.textContent = label;
+      opt.disabled = disabled;
+      slotSelect.appendChild(opt);
+    });
+    if (slots.length === 0){
+      const opt = document.createElement('option');
+      opt.textContent = 'TIDAK ADA SLOT TERSISA UNTUK TANGGAL INI';
+      opt.disabled = true;
+      slotSelect.appendChild(opt);
+    } else if (prevValue && Array.from(slotSelect.options).some(o=>o.value===prevValue && !o.disabled)){
+      slotSelect.value = prevValue;
     }
-    opt.value = slot.startHour;
-    opt.textContent = label;
-    opt.disabled = disabled;
-    slotSelect.appendChild(opt);
-  });
-  if (slots.length === 0){
-    const opt = document.createElement('option');
-    opt.textContent = 'TIDAK ADA SLOT TERSISA UNTUK TANGGAL INI';
-    opt.disabled = true;
-    slotSelect.appendChild(opt);
   }
-
-  const pg = document.getElementById('passengerGrid');
-  pg.innerHTML = '';
-  PASSENGERS.forEach(p => {
-    const wrap = document.createElement('label');
-    wrap.className = 'chk-item';
-    wrap.innerHTML = '<input type="checkbox" value="'+p+'"> '+p.toUpperCase();
-    pg.appendChild(wrap);
-  });
 
   const canSubmit = windowOpen && slots.some(s => !findBooking(s.dateKey,s.startHour) && !isConsecutiveBlocked(session.requestRole,s.dateKey,s.startHour));
   const submitBtn = document.getElementById('submitBookingBtn');
   submitBtn.disabled = !canSubmit;
-  document.getElementById('formNote').textContent = !windowOpen
+  const noteText = !windowOpen
     ? 'Form terkunci di luar jam request. Hubungi Admin jika ada kebutuhan darurat.'
-    : 'Boleh lebih dari satu sesi per hari, asal tidak berurutan langsung.';
+    : 'Boleh lebih dari satu sesi per hari, asal tidak berurutan langsung (kebijakan pemerataan pemakaian).';
+  const noteEl = document.getElementById('formNote');
+  if (noteEl.textContent !== noteText) noteEl.textContent = noteText;
 
   renderMyBookings();
 }
 
 function renderMyBookings(){
   const body = document.getElementById('myBookingsBody');
-  body.innerHTML = '';
   const mine = bookings.filter(b => b.requester === session.requestRole && b.status !== 'CANCELLED')
     .sort((a,b)=> a.dateKey-b.dateKey || a.startHour-b.startHour);
+  const sig = mine.map(b => b.id+':'+b.status+':'+statusBadge(b)).join(',');
+  if (body.dataset.cache === sig) return;
+  body.dataset.cache = sig;
+  body.innerHTML = '';
   if (mine.length === 0){
     body.innerHTML = '<tr><td colspan="4" class="empty-state">BELUM ADA BOOKING</td></tr>';
     return;
@@ -783,31 +850,53 @@ document.getElementById('submitBookingBtn').addEventListener('click', () => {
   const dateKey = dateKeyOf(targetDate);
   const hour = parseInt(document.getElementById('slotSelect').value,10);
   if (isNaN(hour)) return;
-  if (findBooking(dateKey,hour)){ alert('Slot ini baru saja diambil user lain.'); renderRequestTab(); return; }
-  if (isConsecutiveBlocked(session.requestRole, dateKey, hour)){ alert('Slot berurutan dengan booking Anda sendiri tidak diperbolehkan.'); renderRequestTab(); return; }
+  if (findBooking(dateKey,hour)){ alert('Slot ini baru saja diambil user lain.'); reqSlotSig=null; renderRequestTab(); return; }
+  if (isConsecutiveBlocked(session.requestRole, dateKey, hour)){ alert('Slot berurutan dengan booking Anda sendiri tidak diperbolehkan (kebijakan pemerataan pemakaian).'); reqSlotSig=null; renderRequestTab(); return; }
 
   const lokasiInput = document.getElementById('lokasiInput');
+  const keperluan = document.getElementById('keperluanInput').value.trim();
   const penumpang = Array.from(document.querySelectorAll('#passengerGrid input:checked')).map(i=>i.value);
   createBooking({
     dateKey, startHour: hour, endHour: hour+1,
     requester: session.requestRole,
-    keperluan: document.getElementById('keperluanInput').value.trim(),
+    keperluan,
     nasabah: document.getElementById('nasabahInput').value.trim(),
     lokasi: lokasiInput.value.trim(),
     mapsUrl: lokasiInput.dataset.mapsurl || null,
     penumpang
   });
+  logActivity(session.requestRole, 'REQUEST BOOKING', fmtHM(hour)+'–'+fmtHM(hour+1)+' ('+fmtDateLabel(targetDate)+') — '+(keperluan||'-'));
   document.getElementById('keperluanInput').value='';
   document.getElementById('nasabahInput').value='';
   lokasiInput.value=''; delete lokasiInput.dataset.mapsurl;
+  document.querySelectorAll('#passengerGrid input:checked').forEach(i=>i.checked=false);
+  reqSlotSig = null;
   renderAll();
 });
 
-document.getElementById('reqLogoutBtn').addEventListener('click', () => { session.requestRole=null; renderRequestTab(); });
+document.getElementById('reqLogoutBtn').addEventListener('click', () => {
+  logActivity(session.requestRole, 'LOGOUT', '-');
+  session.requestRole=null;
+  reqSlotSig = null;
+  renderRequestTab();
+});
 
-/* ===================== RENDER: ADMIN TAB ===================== */
-document.getElementById('adminLoginBtn').addEventListener('click', () => { session.adminLoggedIn = true; renderAdminTab(); });
-document.getElementById('adminLogoutBtn').addEventListener('click', () => { session.adminLoggedIn = false; renderAdminTab(); });
+/* ===================== ADMIN: LOGIN ===================== */
+document.getElementById('adminLoginBtn').addEventListener('click', () => {
+  const pass = document.getElementById('adminPasswordInput').value;
+  const err = document.getElementById('adminLoginError');
+  if (pass !== adminPassword){ err.style.display='block'; return; }
+  err.style.display = 'none';
+  document.getElementById('adminPasswordInput').value = '';
+  session.adminLoggedIn = true;
+  logActivity('ADMIN', 'LOGIN ADMIN', '-');
+  renderAdminTab();
+});
+document.getElementById('adminLogoutBtn').addEventListener('click', () => {
+  logActivity('ADMIN', 'LOGOUT ADMIN', '-');
+  session.adminLoggedIn = false;
+  renderAdminTab();
+});
 
 function renderAdminTab(){
   document.getElementById('adminLogin').style.display = session.adminLoggedIn ? 'none' : 'block';
@@ -827,7 +916,12 @@ function renderAdminTab(){
     if (overrideMode === o.key) cls += o.key==='normal' ? ' active-normal' : (o.key==='forceOpen' ? ' active-open':' active-close');
     div.className = cls;
     div.textContent = o.label;
-    div.onclick = () => { overrideMode = o.key; renderAll(); };
+    div.onclick = () => {
+      overrideMode = o.key;
+      logActivity('ADMIN','UBAH OVERRIDE', o.label);
+      reqSlotSig = null;
+      renderAll();
+    };
     row.appendChild(div);
   });
 
@@ -837,6 +931,8 @@ function renderAdminTab(){
   }
   refreshAdminSlotSelect();
   renderAdminBookingsTable();
+  renderPasswordManager();
+  renderActivityLog();
 }
 document.getElementById('adminDateSelect').addEventListener('change', refreshAdminSlotSelect);
 function refreshAdminSlotSelect(){
@@ -862,19 +958,27 @@ document.getElementById('adminCreateBtn').addEventListener('click', () => {
   const hour = parseInt(document.getElementById('adminSlotSelect').value,10);
   if (isNaN(hour)) return;
   if (findBooking(dk,hour)){ alert('Slot sudah terisi. Batalkan booking lama dulu.'); refreshAdminSlotSelect(); return; }
+  const who = document.getElementById('adminUserSelect').value;
+  const keperluan = document.getElementById('adminKeperluanInput').value.trim().toUpperCase() || '(FORCE BOOKING OLEH ADMIN)';
   createBooking({
     dateKey: dk, startHour: hour, endHour: hour+1,
-    requester: document.getElementById('adminUserSelect').value,
-    keperluan: document.getElementById('adminKeperluanInput').value.trim().toUpperCase() || '(FORCE BOOKING OLEH ADMIN)',
-    nasabah:'', lokasi:'', mapsUrl:null, penumpang:[]
+    requester: who, keperluan, nasabah:'', lokasi:'', mapsUrl:null, penumpang:[]
   });
+  logActivity('ADMIN', 'FORCE BOOKING', who+' — '+fmtHM(hour)+'–'+fmtHM(hour+1)+' ('+fmtDateLabel(date)+')');
   document.getElementById('adminKeperluanInput').value='';
+  reqSlotSig = null;
   renderAll();
 });
 
 function renderAdminBookingsTable(){
   const body = document.getElementById('adminBookingsBody');
   const all = bookings.filter(b=>b.status!=='CANCELLED').sort((a,b)=>a.dateKey-b.dateKey || a.startHour-b.startHour);
+  const sig = all.map(b=>{
+    const start = slotStartDate(b.dateKey,b.startHour), end = slotEndDate(b.dateKey,b.startHour);
+    return b.id+':'+b.status+':'+statusBadgeAdmin(b,start,end)+':'+(b.status!=='CLEARED'&&now>=start);
+  }).join(',');
+  if (body.dataset.cache === sig) return;
+  body.dataset.cache = sig;
   body.innerHTML = '';
   if (all.length===0){ body.innerHTML = '<tr><td colspan="6" class="empty-state">BELUM ADA BOOKING</td></tr>'; return; }
   all.forEach(b => {
@@ -894,10 +998,14 @@ function renderAdminBookingsTable(){
     body.appendChild(tr);
   });
   body.querySelectorAll('[data-clear]').forEach(btn => btn.onclick = () => {
-    const b = bookings.find(x=>x.id==btn.dataset.clear); if(b) b.status='CLEARED'; renderAll();
+    const b = bookings.find(x=>x.id==btn.dataset.clear);
+    if(b){ b.status='CLEARED'; logActivity('ADMIN','TANDAI SELESAI', b.requester+' — '+fmtHM(b.startHour)+'–'+fmtHM(b.endHour)); }
+    reqSlotSig=null; renderAll();
   });
   body.querySelectorAll('[data-cancel]').forEach(btn => btn.onclick = () => {
-    const b = bookings.find(x=>x.id==btn.dataset.cancel); if(b) b.status='CANCELLED'; renderAll();
+    const b = bookings.find(x=>x.id==btn.dataset.cancel);
+    if(b){ b.status='CANCELLED'; logActivity('ADMIN','BATALKAN BOOKING', b.requester+' — '+fmtHM(b.startHour)+'–'+fmtHM(b.endHour)); }
+    reqSlotSig=null; renderAll();
   });
 }
 function statusBadgeAdmin(b,start,end){
@@ -905,6 +1013,58 @@ function statusBadgeAdmin(b,start,end){
   if (now < start) return '<span class="badge booked">TERJADWAL</span>';
   if (now < end) return '<span class="badge inuse">IN USE</span>';
   return '<span class="badge overtime">OVERTIME</span>';
+}
+
+/* ===================== ADMIN: PASSWORD MANAGEMENT ===================== */
+function renderPasswordManager(){
+  const wrap = document.getElementById('pwdManageWrap');
+  if (wrap.dataset.built === '1') return; // build rows once, avoid wiping input-in-progress
+  wrap.dataset.built = '1';
+  wrap.innerHTML = '';
+  REQUESTERS.forEach(name => {
+    const row = document.createElement('div');
+    row.className = 'pwd-row';
+    row.innerHTML =
+      '<span class="pwd-name">'+name.toUpperCase()+'</span>'+
+      '<input type="text" placeholder="PASSWORD BARU" id="pwdInput_'+name+'">'+
+      '<button class="btn btn-ghost btn-small" data-reset="'+name+'">RESET</button>';
+    wrap.appendChild(row);
+  });
+  wrap.querySelectorAll('[data-reset]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const name = btn.dataset.reset;
+      const input = document.getElementById('pwdInput_'+name);
+      const val = input.value.trim();
+      if (!val){ alert('Isi password baru untuk '+name+' terlebih dahulu.'); return; }
+      passwords[name] = val;
+      input.value = '';
+      logActivity('ADMIN', 'RESET PASSWORD', 'Password '+name+' diperbarui');
+      renderActivityLog();
+      alert('Password untuk '+name+' berhasil diperbarui.');
+    });
+  });
+}
+
+/* ===================== ADMIN: ACTIVITY LOG ===================== */
+function renderActivityLog(){
+  const body = document.getElementById('activityLogBody');
+  const sig = activityLog.length + (activityLog[0] ? activityLog[0].time.getTime() : 0);
+  if (body.dataset.cache === String(sig)) return;
+  body.dataset.cache = String(sig);
+  body.innerHTML = '';
+  if (activityLog.length === 0){
+    body.innerHTML = '<tr><td colspan="4" class="empty-state">BELUM ADA AKTIVITAS</td></tr>';
+    return;
+  }
+  activityLog.slice(0,80).forEach(e => {
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td style="font-family:var(--mono);font-size:10.5px;white-space:nowrap;">'+fmtDateTime(e.time)+'</td>'+
+      '<td>'+escapeHtml(e.actor)+'</td>'+
+      '<td>'+escapeHtml(e.action)+'</td>'+
+      '<td>'+escapeHtml(e.detail)+'</td>';
+    body.appendChild(tr);
+  });
 }
 
 /* ===================== TAB SWITCHING ===================== */
@@ -916,6 +1076,13 @@ document.querySelectorAll('nav.tabs button').forEach(btn => {
     document.getElementById('view-'+activeTab).classList.add('active');
     renderAll();
   });
+});
+document.getElementById('footerCopyright').addEventListener('click', () => {
+  activeTab = 'admin';
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-admin').classList.add('active');
+  renderAll();
 });
 
 /* ===================== MASTER RENDER + CLOCK TICK ===================== */
