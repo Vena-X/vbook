@@ -80,6 +80,8 @@
   .slot-body .field-row .lbl{color:var(--text-dim-2);min-width:48px;flex-shrink:0;}
   .slot-body a.maps-link{color:var(--blue);text-decoration:none;border-bottom:1px dotted rgba(111,179,255,.5);}
   .slot-body a.maps-link:hover{color:var(--gold-soft);}
+  .maps-embed-link{display:block;margin-top:4px;border-radius:8px;overflow:hidden;border:1px solid var(--glass-border);}
+  .maps-embed{width:100%;height:110px;border:0;display:block;pointer-events:none;}
   .passenger-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px;}
   .passenger-chips span{background:rgba(255,255,255,.06);border:1px solid var(--glass-border);border-radius:5px;padding:1px 6px;font-size:9.5px;color:var(--text-dim);}
   .slot-countdown{ margin-top:auto;padding-top:9px;border-top:1px solid rgba(255,255,255,.08); font-family:var(--mono);font-size:13px;font-weight:600; }
@@ -130,11 +132,6 @@
   .session-pill{ font-family:var(--mono);font-size:11.5px;border-radius:20px;padding:6px 14px; background:rgba(255,255,255,.05);border:1px solid var(--glass-border); }
   .session-pill b{color:var(--gold-soft);}
   .login-error{color:var(--red);font-size:11.5px;margin-top:10px;text-align:center;display:none;}
-  .login-hint{font-size:10.5px;color:var(--text-dim-2);margin-top:14px;text-align:center;}
-  .perm-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px;}
-  .perm-status{font-family:var(--mono);font-size:11px;font-weight:700;}
-  .perm-status.ok{color:var(--green);}
-  .perm-status.no{color:var(--red);}
   .field-error{font-size:10.5px;color:var(--red);margin-top:8px;display:none;}
 
   table{width:100%;border-collapse:collapse;font-size:11.5px;}
@@ -228,16 +225,6 @@
     <div class="blackout-banner glass">⛔ JAM ISTIRAHAT 12:00–14:00 — TIDAK ADA SESI BOOKING PADA JAM INI.</div>
     <div class="slot-grid" id="boardGrid"></div>
 
-    <div class="panel glass" style="margin-top:16px;">
-      <h2>Acuan Servis Kendaraan (Dari Tracking GPS Sesi Aktif)</h2>
-      <div class="stat-row">
-        <div class="stat-card"><div class="stat-label">Total Jarak Tercatat</div><div class="stat-value" id="statTotalKm">0.0 KM</div></div>
-        <div class="stat-card"><div class="stat-label">Sisa s/d Servis Oli (5.000 KM)</div><div class="stat-value" id="statOil">-</div></div>
-        <div class="stat-card"><div class="stat-label">Sisa s/d Ganti Ban (20.000 KM)</div><div class="stat-value" id="statTire">-</div></div>
-      </div>
-      <p class="note">Tracking jarak berjalan otomatis dari perangkat requester saat sesi sedang IN USE (selama tab V-BOOK terbuka), lalu berhenti otomatis saat sesi berakhir.</p>
-    </div>
-
     <div class="panel glass">
       <h2>Laporan &amp; Cetak</h2>
       <p class="note" style="margin-top:0;">Data laporan tetap tersimpan meski sesi harian di-reset otomatis jam 18:00.</p>
@@ -272,7 +259,6 @@
         <input type="password" id="loginPasswordInput" placeholder="••••">
         <div style="margin-top:18px;"><button class="btn btn-primary btn-block" id="loginSubmitBtn">Masuk</button></div>
         <div class="login-error" id="loginError">Nama atau password salah.</div>
-        <div class="login-hint">Demo password awal untuk semua akun: <b style="color:var(--text-dim)">1234</b> — admin dapat mengubahnya di panel Admin, atau Anda bisa mengubahnya sendiri setelah login.</div>
       </div>
     </div>
 
@@ -308,13 +294,6 @@
               <input type="text" id="lokasiInput" placeholder="ALAMAT TUJUAN">
               <button class="btn btn-gps btn-small" id="gpsBtnReq" type="button">📍 GPS</button>
             </div>
-
-            <label>Izin Akses Lokasi (GPS/Maps) *</label>
-            <div class="perm-row">
-              <button class="btn btn-loc btn-small" id="locPermBtn" type="button">📍 Izinkan Akses Lokasi</button>
-              <span class="perm-status no" id="locPermStatus">BELUM DIIZINKAN ❌</span>
-            </div>
-            <p class="note" style="margin-top:6px;">Izin lokasi wajib diberikan agar sistem dapat mengaktifkan tracking jarak tempuh otomatis selama sesi berjalan (acuan servis oli &amp; ganti ban). Tanpa izin ini, booking tidak dapat diajukan.</p>
 
             <label>Penumpang (Opsional)</label>
             <div class="checkbox-grid" id="passengerGrid"></div>
@@ -360,7 +339,6 @@
         <input type="password" id="adminPasswordInput" placeholder="••••••••">
         <div style="margin-top:18px;"><button class="btn btn-primary btn-block" id="adminLoginBtn">Masuk</button></div>
         <div class="login-error" id="adminLoginError">Password salah.</div>
-        <div class="login-hint">Demo: <b style="color:var(--text-dim)">admin2026</b> — setelah terhubung ke Firebase, sebaiknya diganti dengan Firebase Authentication.</div>
       </div>
     </div>
 
@@ -368,6 +346,16 @@
       <div class="topbar-session">
         <div class="session-pill">Login sebagai <b>Admin</b></div>
         <button class="btn btn-ghost btn-small" id="adminLogoutBtn">Keluar</button>
+      </div>
+
+      <div class="panel glass">
+        <h2>Acuan Servis Kendaraan (Dari Tracking GPS Sesi Aktif)</h2>
+        <div class="stat-row">
+          <div class="stat-card"><div class="stat-label">Total Jarak Tercatat</div><div class="stat-value" id="statTotalKm">0.0 KM</div></div>
+          <div class="stat-card"><div class="stat-label">Sisa s/d Servis Oli (5.000 KM)</div><div class="stat-value" id="statOil">-</div></div>
+          <div class="stat-card"><div class="stat-label">Sisa s/d Ganti Ban (20.000 KM)</div><div class="stat-value" id="statTire">-</div></div>
+        </div>
+        <p class="note">Tracking jarak berjalan otomatis dari perangkat requester saat sesi sedang IN USE, lalu berhenti otomatis saat sesi berakhir.</p>
       </div>
 
       <div class="panel glass">
@@ -465,26 +453,24 @@ let lastTickerText = null;
 let reqSlotSig = null;
 let locationGranted = false;
 
-/* ===================== FIREBASE (opsional) =====================
-   Ganti nilai di bawah dengan config dari Firebase Console > Project Settings > Your apps.
-   Selama nilainya masih "GANTI_..." aplikasi berjalan di mode lokal (data tersimpan di memori browser saja). */
+/* ===================== FIREBASE ===================== */
 const firebaseConfig = {
-  apiKey: "GANTI_API_KEY",
-  authDomain: "GANTI_AUTH_DOMAIN",
-  projectId: "GANTI_PROJECT_ID",
-  storageBucket: "GANTI_STORAGE_BUCKET",
-  messagingSenderId: "GANTI_SENDER_ID",
-  appId: "GANTI_APP_ID"
+  apiKey: "AIzaSyD77ykUFEJibaP7edoss9dwM_h6OocM6lA",
+  authDomain: "vbook-15341.firebaseapp.com",
+  projectId: "vbook-15341",
+  storageBucket: "vbook-15341.firebasestorage.app",
+  messagingSenderId: "375153255421",
+  appId: "1:375153255421:web:ac5026af3d714920f3ef94"
 };
 let FIREBASE_ENABLED = false;
 let db = null;
 try{
-  if (firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith('GANTI_') && typeof firebase !== 'undefined'){
+  if (firebaseConfig.apiKey && typeof firebase !== 'undefined'){
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
     FIREBASE_ENABLED = true;
   }
-}catch(e){ console.warn('Firebase tidak aktif, berjalan mode lokal.', e); FIREBASE_ENABLED = false; }
+}catch(e){ console.error('Firebase gagal diinisialisasi.', e); FIREBASE_ENABLED = false; }
 
 function subscribeFirebase(){
   db.collection('bookings').onSnapshot(snap=>{
@@ -647,22 +633,16 @@ function bindGpsButton(btnId, inputId){
     }, err => { input.placeholder = oldPh; alert(geoErrorMessage(err)); }, { enableHighAccuracy:true, timeout:8000, maximumAge:0 });
   });
 }
-document.getElementById('locPermBtn').addEventListener('click', () => {
-  if (!window.isSecureContext){ alert('Izin lokasi hanya berfungsi pada koneksi HTTPS. Akan aktif otomatis setelah di-deploy ke GitHub Pages.'); return; }
-  if (!navigator.geolocation){ alert('Perangkat/browser ini tidak mendukung GPS.'); return; }
-  navigator.geolocation.getCurrentPosition(() => {
-    locationGranted = true;
-    document.getElementById('locPermStatus').textContent = 'DIIZINKAN ✅';
-    document.getElementById('locPermStatus').className = 'perm-status ok';
-    updateSubmitEnabled();
-  }, err => {
-    locationGranted = false;
-    document.getElementById('locPermStatus').textContent = 'BELUM DIIZINKAN ❌';
-    document.getElementById('locPermStatus').className = 'perm-status no';
-    alert(geoErrorMessage(err));
-    updateSubmitEnabled();
-  }, { enableHighAccuracy:true, timeout:8000, maximumAge:0 });
-});
+function requestLocationPermission(){
+  return new Promise(resolve => {
+    if (!window.isSecureContext || !navigator.geolocation){ locationGranted = false; resolve(false); return; }
+    navigator.geolocation.getCurrentPosition(
+      () => { locationGranted = true; resolve(true); },
+      () => { locationGranted = false; resolve(false); },
+      { enableHighAccuracy:true, timeout:8000, maximumAge:0 }
+    );
+  });
+}
 
 /* ===================== GPS TRACKING DURING ACTIVE SESSION ===================== */
 let trackingBookingId = null, trackingWatchId = null, trackingLastPos = null;
@@ -736,6 +716,16 @@ let boardBuiltDateKey = null;
 let boardCardRefs = {};
 let boardCardStateKey = {};
 
+function mapsEmbedUrl(b){
+  let q = null;
+  if (b.mapsUrl){
+    const m = b.mapsUrl.match(/q=([^&]+)/);
+    if (m) q = decodeURIComponent(m[1]);
+  }
+  if (!q) q = b.lokasi;
+  if (!q) return null;
+  return 'https://maps.google.com/maps?q='+encodeURIComponent(q)+'&z=15&output=embed';
+}
 function detailRows(b){
   let rows = '<span class="req-name">'+escapeHtml(b.requester)+'</span>';
   rows += fieldRow('KEPERLUAN', escapeHtml(b.keperluan));
@@ -743,6 +733,8 @@ function detailRows(b){
   if (b.lokasi){
     const link = b.mapsUrl || mapsSearchLink(b.lokasi);
     rows += fieldRow('LOKASI', '<a class="maps-link" target="_blank" rel="noopener" href="'+link+'">📍 '+escapeHtml(b.lokasi)+'</a>');
+    const embedUrl = mapsEmbedUrl(b);
+    if (embedUrl) rows += '<a class="maps-embed-link" target="_blank" rel="noopener" href="'+link+'"><iframe class="maps-embed" src="'+embedUrl+'" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></a>';
   }
   if (b.penumpang && b.penumpang.length) rows += '<div class="passenger-chips">'+b.penumpang.map(p=>'<span>'+escapeHtml(p)+'</span>').join('')+'</div>';
   return rows;
@@ -766,7 +758,7 @@ function ensureBoardCards(){
 }
 function renderBoard(){
   document.getElementById('boardDateLabel').textContent = fmtDateLabel(now);
-  renderTicker(); renderStats(); ensureBoardCards();
+  renderTicker(); ensureBoardCards();
   buildSlotsForDate(now).forEach(slot => {
     const hour = slot.startHour;
     const start = slotStartDate(slot.dateKey, hour), end = slotEndDate(slot.dateKey, hour);
@@ -827,11 +819,10 @@ document.getElementById('loginSubmitBtn').addEventListener('click', () => {
   err.style.display='none';
   document.getElementById('loginPasswordInput').value='';
   session.requestRole = name; reqSlotSig=null; locationGranted=false;
-  document.getElementById('locPermStatus').textContent='BELUM DIIZINKAN ❌';
-  document.getElementById('locPermStatus').className='perm-status no';
   buildPassengerGrid();
   logActivity(name, 'LOGIN REQUESTER', 'Berhasil login ke form request');
   renderRequestTab();
+  requestLocationPermission().then(updateSubmitEnabled);
 });
 
 function computeMandatoryValid(){
@@ -929,8 +920,9 @@ function statusBadge(b){
 }
 
 document.getElementById('submitBookingBtn').addEventListener('click', async () => {
+  await requestLocationPermission();
   const { valid, missing } = computeMandatoryValid();
-  if (!valid){ alert('Lengkapi field wajib berikut sebelum mengajukan booking:\\n- '+missing.join('\\n- ')); return; }
+  if (!valid){ alert('Lengkapi field wajib berikut sebelum mengajukan booking:\\n- '+missing.join('\\n- ')); updateSubmitEnabled(); return; }
 
   const targetDate = targetBookingDate();
   const dateKey = dateKeyOf(targetDate);
@@ -1009,6 +1001,8 @@ function renderAdminTab(){
   document.getElementById('adminApp').style.display = session.adminLoggedIn ? 'block' : 'none';
   if (!session.adminLoggedIn) return;
 
+  renderStats();
+
   const row = document.getElementById('overrideRow');
   const opts = [ {key:'normal',label:'NORMAL (IKUTI JAM SERVER)'}, {key:'forceOpen',label:'FORCE OPEN'}, {key:'forceClose',label:'FORCE CLOSE'} ];
   row.innerHTML = '';
@@ -1045,6 +1039,8 @@ function refreshAdminSlotSelect(){
   sel.dataset.dateKey = dk;
 }
 document.getElementById('adminCreateBtn').addEventListener('click', async () => {
+  const permOk = await requestLocationPermission();
+  if (!permOk){ alert('Izin akses lokasi diperlukan untuk mengaktifkan tracking kendaraan sebelum booking manual dapat dibuat.'); return; }
   const which = document.getElementById('adminDateSelect').value;
   const date = which==='today' ? startOfDay(now) : startOfDay(addDays(now,1));
   const dk = dateKeyOf(date);
