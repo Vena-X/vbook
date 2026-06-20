@@ -723,7 +723,7 @@ function setLocPermNote(state){
   if (!el) return;
   if (state === 'checking'){ el.textContent = 'Memeriksa izin lokasi...'; el.style.color = ''; }
   else if (state === 'granted'){ el.textContent = '✅ Akses lokasi diizinkan — tracking kendaraan aktif saat sesi berjalan.'; el.style.color = 'var(--green)'; }
-  else { el.textContent = '❌ Akses lokasi ditolak/tidak tersedia. Aktifkan izin lokasi untuk browser ini di pengaturan HP, lalu refresh halaman.'; el.style.color = 'var(--red)'; }
+  else { el.textContent = '❌ Akses lokasi ditolak/tidak tersedia. Silakan Keluar lalu login kembali untuk mengizinkan akses lokasi.'; el.style.color = 'var(--red)'; }
 }
 function requestLocationPermission(){
   setLocPermNote('checking');
@@ -946,7 +946,7 @@ function computeMandatoryValid(){
   const kep = document.getElementById('keperluanSelect').value;
   if (!kep) missing.push('Keperluan');
   else if (kep === 'LAINNYA' && !document.getElementById('keperluanLainnyaInput').value.trim()) missing.push('Keterangan Lainnya');
-  if (!locationGranted) missing.push('Izin Akses Lokasi (GPS/Maps)');
+  if (!locationGranted) missing.push('Izin Akses Lokasi (GPS/Maps) — jika sebelumnya ditolak, silakan Keluar lalu login kembali untuk diminta izin ulang');
   if (!document.getElementById('nasabahInput').value.trim()) missing.push('Nama Nasabah');
   return { valid: missing.length===0, missing };
 }
