@@ -994,6 +994,10 @@ function detailRows(b){
     const link = b.mapsUrl || mapsSearchLink(b.lokasi);
     const embedUrl = mapsEmbedUrl(b.lokasiLat, b.lokasiLng, b.lokasi);
     rows += fieldRow('LOKASI', '<a class="maps-link" target="_blank" rel="noopener" href="'+link+'">📍 '+escapeHtml(b.lokasi)+'</a>');
+    if (b.lokasiLat && b.lokasiLng){
+      const estKm = haversineKm(officeLat, officeLng, b.lokasiLat, b.lokasiLng);
+      rows += fieldRow('JARAK', '<b style="color:var(--gold-soft)">'+estKm.toFixed(1)+' KM</b> (Kantor → Tujuan)');
+    }
     if (b.arrivedAt) rows += fieldRow('TIBA', '<span style="color:var(--green)">✅ '+fmtDateTime(new Date(b.arrivedAt))+'</span>');
     if (embedUrl) rows += '<div class="lazy-map" data-embed="'+escapeHtml(embedUrl)+'" data-link="'+escapeHtml(link)+'"><button type="button" class="btn btn-ghost btn-small lazy-map-btn">🗺️ Tampilkan Peta</button></div>';
   }
