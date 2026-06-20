@@ -217,6 +217,7 @@
 
 <main class="no-print">
 
+  <!-- ============ BOARD VIEW ============ -->
   <section class="view active" id="view-board">
     <div class="page-title">
       <h1>Vehicle Control Center</h1>
@@ -239,6 +240,7 @@
     </div>
   </section>
 
+  <!-- ============ REQUEST VIEW ============ -->
   <section class="view" id="view-request">
     <div id="requestLogin">
       <div class="page-title"><h1>Request Mobil</h1></div>
@@ -342,12 +344,16 @@
     </div>
   </section>
 
+  <!-- ============ ADMIN VIEW ============ -->
   <section class="view" id="view-admin">
     <div id="adminLogin">
       <div class="page-title"><h1>Admin Panel</h1></div>
       <div class="panel glass login-card">
         <div class="login-title">Akses Admin</div>
-        <div id="adminAuthArea"><p class="note">Memeriksa akun admin...</p></div>
+        <div class="login-sub">Masukkan password khusus admin untuk masuk kendali</div>
+        <label>Password Admin</label>
+        <input type="password" id="adminPassInput" placeholder="••••">
+        <div style="margin-top:18px;"><button class="btn btn-primary btn-block" id="adminAuthSubmitBtn">Masuk</button></div>
         <div class="login-error" id="adminLoginError"></div>
       </div>
     </div>
@@ -375,7 +381,6 @@
 
       <div class="panel glass">
         <h2>Riwayat & Rekap Jarak Kendaraan</h2>
-        <div class="report-row" id="rekapRangeRow"></div>
         <div style="overflow-x:auto;margin-top:12px;">
           <table>
             <thead><tr><th>Hari/Tanggal</th><th>Sesi</th><th>Requester</th><th>Asal</th><th>Tujuan</th><th>Jarak (KM)</th></tr></thead>
@@ -453,6 +458,7 @@
 
 <footer class="glass no-print" id="footerCopyright">© 2026 <b>SRISP</b> — V-BOOK Fleet Reservation System</footer>
 
+<!-- ============ PRINT-ONLY REPORT AREA ============ -->
 <div class="print-only" id="printArea">
   <h1 id="printReportTitle" style="font-family:Arial,sans-serif;font-size:18px;">Laporan</h1>
   <div id="printReportMeta" style="font-size:11px;color:#444;margin-bottom:14px;font-family:Arial,sans-serif;"></div>
@@ -472,37 +478,32 @@ const ALL_POSSIBLE_HOURS = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20
 const KEPERLUAN_OPTIONS = ['VISIT NASABAH','AKAD PEMBIAYAAN','JOIN VISIT','TUKAP','SERVICE KENDARAAN','KLIRING','AKTIFITAS BM','LAINNYA'];
 const OIL_INTERVAL_KM = 5000, TIRE_INTERVAL_KM = 20000;
 
-// KOORDINAT KANTOR TETAP (Sebagai acuan hitung jarak awal estimasi)
 const OFFICE_LAT = -5.54829; 
 const OFFICE_LNG = 95.32375;
 
 let now = new Date();
 let bookings = [];
 let reportArchive = [];
-let bookingSeq = 1;
 let activityLog = [];
 let vehicleOdometerKm = 0;
 let resetDoneForDateStr = null;
 let resetCheckInFlight = false;
 
-let session = { requestRole: null, adminLoggedIn: false, adminEmail: null };
+let session = { requestRole: null, adminLoggedIn: false };
 let overrideMode = 'normal';
 let activeTab = 'board';
 let lastTickerText = null;
-let reqSlotSig = null;
 
 // STATE EDIT BOOKING
 let editingBookingId = null;
 
 // STATE KONTROL AKSES LOKASI
-let locationPermissionState = 'prompt'; // prompt, granted, denied
-let locationTestStatus = 'waiting'; // waiting, testing, verified, failed
+let locationPermissionState = 'prompt';
+let locationTestStatus = 'waiting';
 let wakeLockObject = null;
 let watchPositionId = null;
 
 let requesterPasswords = {};
-let adminProfileEmail = null, adminAuthMode = null, adminAuthChecked = false;
-let localAdminProfile = null;
 
 /* ===================== FIREBASE ===================== */
 const firebaseConfig = {
@@ -527,7 +528,6 @@ try{
 function subscribeFirebase(){
   db.collection('bookings').onSnapshot(snap=>{
     bookings = snap.docs.map(d=>d.data());
-    reqSlotSig=null; boardBuiltDateKey=null;
     renderAll();
   }, err=>console.error('bookings sync error', err));
   db.collection('archivedBookings').onSnapshot(snap=>{
@@ -569,8 +569,7 @@ async function seedDefaultPasswords(){
 if (FIREBASE_ENABLED) subscribeFirebase();
 seedDefaultPasswords();
 
-/* ===================== HARVESTING / GEOLOCATION LOGIC ===================== */
-// Menghitung Jarak Rumus Haversine (Murni Matematis)
+/* ===================== GEOLOCATION LOGIC ===================== */
 function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
   const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -579,10 +578,9 @@ function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
             Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
             Math.sin(dLon/2) * Math.sin(dLon/2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  return R * c; // KM
+  return R * c;
 }
 
-// Terbuka penuh mengintegrasikan peta Google Maps API Picker alternatif bebas biaya / tautan terstruktur
 function openMapsLocationPicker(targetInputId, targetLabelId) {
   const inputEl = document.getElementById(targetInputId);
   const query = prompt("Masukkan nama lokasi/alamat tujuan (Contoh: Lampaseh Banda Aceh atau koordinat -5.5,95.3):");
@@ -590,7 +588,6 @@ function openMapsLocationPicker(targetInputId, targetLabelId) {
   
   inputEl.value = query.toUpperCase();
   
-  // Deteksi jika input merupakan koordinat lat,lng langsung
   const coordRegex = /^(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)$/;
   const match = query.match(coordRegex);
   if (match) {
@@ -598,10 +595,9 @@ function openMapsLocationPicker(targetInputId, targetLabelId) {
     const lng = parseFloat(match[2]);
     inputEl.dataset.lat = lat;
     inputEl.dataset.lng = lng;
-    const distance = calculateHaversineDistance(OFFICE_LAT, OFFICE_LONG, lat, lng);
+    const distance = calculateHaversineDistance(OFFICE_LAT, OFFICE_LNG, lat, lng);
     document.getElementById(targetLabelId).innerText = `Jarak Estimasi: ${distance.toFixed(2)} KM`;
   } else {
-    // Jika berbentuk teks alamat, buat random estimasi realistis (5 - 25 km) atau cari titik generik
     inputEl.dataset.lat = (OFFICE_LAT + (Math.random() - 0.5) * 0.1).toFixed(5);
     inputEl.dataset.lng = (OFFICE_LNG + (Math.random() - 0.5) * 0.1).toFixed(5);
     const distance = calculateHaversineDistance(OFFICE_LAT, OFFICE_LNG, parseFloat(inputEl.dataset.lat), parseFloat(inputEl.dataset.lng));
@@ -614,7 +610,6 @@ async function startAutomaticBackgroundTracking() {
   if (!navigator.geolocation) return;
   if (watchPositionId) navigator.geolocation.clearWatch(watchPositionId);
   
-  // Ambil Kontrol Kunci Layar (Wake Lock API) agar background berjalan 100% tanpa mati
   try {
     if ('wakeLock' in navigator) {
       wakeLockObject = await navigator.wakeLock.request('screen');
@@ -626,14 +621,12 @@ async function startAutomaticBackgroundTracking() {
       const lat = position.coords.latitude;
       const lng = position.coords.longitude;
       
-      // Temukan sesi aktif saat ini di database untuk di-update koordinat & hitung jarak aktual real-time
       const activeBooking = bookings.find(b => b.requester === session.requestRole && b.status === 'IN USE');
       if (activeBooking && FIREBASE_ENABLED) {
         let lastLat = activeBooking.lastLat || OFFICE_LAT;
         let lastLng = activeBooking.lastLng || OFFICE_LNG;
         let traveled = calculateHaversineDistance(lastLat, lastLng, lat, lng);
         
-        // Saring noise lonjakan GPS palsu
         if (traveled > 0.02 && traveled < 3) {
           const updatedDistance = (activeBooking.distanceReal || 0) + traveled;
           
@@ -643,7 +636,6 @@ async function startAutomaticBackgroundTracking() {
             distanceReal: parseFloat(updatedDistance.toFixed(2))
           }).catch(e=>console.error(e));
           
-          // Geofencing otomatis jika mendekati tujuan di bawah 50 meter (0.05 KM)
           if (activeBooking.targetLat) {
             const distanceToTarget = calculateHaversineDistance(lat, lng, parseFloat(activeBooking.targetLat), parseFloat(activeBooking.targetLng));
             if (distanceToTarget <= 0.05) {
@@ -652,8 +644,7 @@ async function startAutomaticBackgroundTracking() {
                 endTimeActual: new Date().getTime()
               }).catch(e=>console.error(e));
               
-              // Tambahkan log aktivitas
-              writeLog(activeBooking.requester, "TIBA DI LOKASI", `Otomatis selesai via Geofencing Radius di lokasi target.`);
+              writeLog(activeBooking.requester, "TIBA DI LOKASI", `Otomatis selesai via Geofencing Radius.`);
             }
           }
         } else if (!activeBooking.lastLat) {
@@ -661,12 +652,11 @@ async function startAutomaticBackgroundTracking() {
         }
       }
     },
-    (error) => { console.error("WatchPosition error: ", error); },
+    (error) => { console.error(error); },
     { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
   );
 }
 
-// Prosedur Uji Coba Latar Belakang Tegas Tanpa klik berulang
 function verifyLocationPermissionState() {
   const noteEl = document.getElementById('locPermNote');
   if (!navigator.geolocation) {
@@ -682,24 +672,14 @@ function verifyLocationPermissionState() {
 
   navigator.geolocation.getCurrentPosition(
     (pos) => {
-      // Periksa status permission API jika didukung browser
       if (navigator.permissions && navigator.permissions.query) {
         navigator.permissions.query({ name: 'geolocation' }).then((result) => {
           locationPermissionState = result.state;
-          localStorage.setItem('vbook_loc_granted', 'true'); // Simpan status permanen agar tidak perlu reset
-          
-          if (locationPermissionState === 'granted') {
-            noteEl.innerHTML = "✅ Izin Valid (Sepanjang Waktu). Sesi otomatis tracking aktif.";
-            noteEl.style.color = "var(--green)";
-            locationTestStatus = 'verified';
-            startAutomaticBackgroundTracking();
-          } else {
-            // Jika mode standard 'granted' biasa di browser web (bukan standalone PWA), logic fallback memeriksa ketahanan background
-            noteEl.innerHTML = "⚠️ Sesi terdeteksi menggunakan izin sementara. Sistem siap melacak.";
-            noteEl.style.color = "var(--gold)";
-            locationTestStatus = 'verified';
-            startAutomaticBackgroundTracking();
-          }
+          localStorage.setItem('vbook_loc_granted', 'true');
+          noteEl.innerHTML = "✅ Izin Valid. Sesi otomatis tracking aktif.";
+          noteEl.style.color = "var(--green)";
+          locationTestStatus = 'verified';
+          startAutomaticBackgroundTracking();
           updateSubmitEnabled();
         });
       } else {
@@ -713,8 +693,8 @@ function verifyLocationPermissionState() {
     },
     (err) => {
       locationTestStatus = 'failed';
-      localStorage.removeItem('vbook_loc_granted'); // Hapus jika ditolak
-      noteEl.innerHTML = "❌ AKSES DITOLAK! Setel Izin Browser Anda ke 'Izinkan Sepanjang Waktu' untuk membuka tombol booking.";
+      localStorage.removeItem('vbook_loc_granted');
+      noteEl.innerHTML = "❌ AKSES DITOLAK! Setel Izin Browser Anda ke 'Izinkan Sepanjang Waktu'.";
       noteEl.style.color = "var(--red)";
       updateSubmitEnabled();
     },
@@ -733,9 +713,7 @@ function fmtDateTime(d){ return fmtDateLabel(d)+' — '+pad(d.getHours())+':'+pa
 
 function isWindowOpenByClock(d){
   const h = d.getHours(), m = d.getMinutes();
-  if (h >= 17) return true;
-  if (h < 8) return true;
-  if (h === 8 && m < 30) return true;
+  if (h >= 17 || h < 8 || (h === 8 && m < 30)) return true;
   return false;
 }
 function effectiveWindowOpen(){
@@ -745,8 +723,7 @@ function effectiveWindowOpen(){
 }
 function targetBookingDate(){
   const h = now.getHours(), m = now.getMinutes();
-  const isLateNightToMorning = (h < 8) || (h === 8 && m < 30);
-  if (isLateNightToMorning) return startOfDay(now);
+  if ((h < 8) || (h === 8 && m < 30)) return startOfDay(now);
   if (h >= 17) return startOfDay(addDays(now,1));
   return startOfDay(now);
 }
@@ -784,7 +761,7 @@ function checkDailyReset(){
 async function executeDailyReset(){
   if (resetCheckInFlight) return;
   resetCheckInFlight = true;
-  await writeLog("SYSTEM", "DAILY RESET", "Mengarsipkan otomatis sesi aktif hari ini ke laporan permanen.");
+  await writeLog("SYSTEM", "DAILY RESET", "Mengarsipkan otomatis sesi aktif hari ini.");
   
   const todayKey = dateKeyOf(now);
   const activeToday = bookings.filter(b => b.dateKey === todayKey);
@@ -794,17 +771,8 @@ async function executeDailyReset(){
       try{
         await db.collection('archivedBookings').doc(b.id).set(b);
         await db.collection('bookings').doc(b.id).delete();
-      }catch(e){console.error('Archive fail', b.id, e);}
+      }catch(e){console.error(e);}
     }
-    try{
-      const snap = await db.collection('bookings').get();
-      const batch = db.batch();
-      snap.docs.forEach(doc => {
-        const bk = doc.data().dateKey;
-        if (bk < todayKey) batch.delete(doc.ref);
-      });
-      await batch.commit();
-    }catch(e){console.error('Purge old error', e);}
   } else {
     activeToday.forEach(b => reportArchive.push(b));
     bookings = bookings.filter(b => b.dateKey !== todayKey && b.dateKey >= todayKey);
@@ -818,11 +786,8 @@ function updateTrackingState(){
     const end = slotEndDate(b.dateKey, b.endHour);
     let targetStatus = 'BOOKED';
     
-    if (now >= start && now < end) {
-      targetStatus = 'IN USE';
-    } else if (now >= end) {
-      targetStatus = 'OVERTIME';
-    }
+    if (now >= start && now < end) targetStatus = 'IN USE';
+    else if (now >= end) targetStatus = 'OVERTIME';
     
     if (b.status !== 'CLEARED' && b.status !== targetStatus) {
       b.status = targetStatus;
@@ -848,21 +813,19 @@ document.querySelectorAll('nav.tabs button').forEach(btn => {
 });
 
 /* ===================== CONTROL CENTER / BOARD ===================== */
-let boardBuiltDateKey = null;
 function renderClock(){
   document.getElementById('clockTime').innerText = pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds());
   document.getElementById('clockDate').innerText = fmtDateLabel(now);
 }
 
 function renderBoard(){
-  const bdl = document.getElementById('boardDateLabel');
-  bdl.innerText = "HARI INI: " + fmtDateLabel(now);
+  document.getElementById('boardDateLabel').innerText = "HARI INI: " + fmtDateLabel(now);
   
   const tickerContainer = document.getElementById('tickerTrack');
   const activeInUse = bookings.filter(b => b.status === 'IN USE');
   let text = "✓ FLIGHT RESERVATION SYSTEM ACTIVE — READY UNTUK DIRESCHEDULE OPERASIONAL.";
   if (activeInUse.length > 0){
-    text = activeInUse.map(b => `⚠️ OPERASIONAL SEDANG DIGUNAKAN OLEH [${b.requester.toUpperCase()}] KEJUAN: ${b.lokasi.toUpperCase()} (NASABAH: ${b.nasabah.toUpperCase()})`).join('  •••  ');
+    text = activeInUse.map(b => `⚠️ OPERASIONAL SEDANG DIGUNAKAN OLEH [${b.requester.toUpperCase()}] KE LOKASI: ${b.lokasi.toUpperCase()}`).join('  •••  ');
   }
   if (text !== lastTickerText){
     tickerContainer.innerHTML = `<span>${text}</span><span>${text}</span>`;
@@ -872,7 +835,6 @@ function renderBoard(){
   const grid = document.getElementById('boardGrid');
   grid.innerHTML = '';
   
-  const todayKey = dateKeyOf(now);
   const slots = buildSlotsForDate(now);
   
   slots.forEach(sl => {
@@ -933,7 +895,6 @@ function renderBoard(){
       `;
       card.appendChild(body);
       
-      // Hitung Mundur Sesi Aktif
       const cdBox = document.createElement('div');
       cdBox.className = 'slot-countdown';
       const end = slotEndDate(b.dateKey, b.endHour);
@@ -974,9 +935,6 @@ function initKeperluanSelect(){
     updateSubmitEnabled();
   });
 }
-function bindUppercase(id){
-  document.getElementById(id).addEventListener('input', function(){ this.value = this.value.toUpperCase(); });
-}
 
 function buildPassengerGrid(){
   const g = document.getElementById('passengerGrid');
@@ -1007,8 +965,6 @@ function updateLokasiPreview(){
 
 function updateSubmitEnabled(){
   const btn = document.getElementById('submitBookingBtn');
-  
-  // KUNCI MULTIMODAL UTAMA: Jika izin lokasi / tes background gagal, tombol booking WAJIB beku
   if (locationTestStatus !== 'verified') {
     btn.disabled = true;
     btn.innerText = "Ajukan Booking (Butuh Izin Lokasi)";
@@ -1026,12 +982,10 @@ function updateSubmitEnabled(){
   btn.innerText = editingBookingId ? "Simpan Perubahan" : "Ajukan Booking";
 }
 
-// Handler Tombol Navigasi Maps Picker
 document.getElementById('gpsBtnReq').addEventListener('click', () => {
   openMapsLocationPicker('lokasiInput', 'distanceEstimasiLabel');
 });
 
-// LOGIN REQUESTER
 document.getElementById('loginSubmitBtn').addEventListener('click', async () => {
   const name = document.getElementById('loginNameSelect').value;
   const pass = document.getElementById('loginPasswordInput').value;
@@ -1044,7 +998,7 @@ document.getElementById('loginSubmitBtn').addEventListener('click', async () => 
   
   errEl.style.display = 'none';
   session.requestRole = name;
-  saveSession(name);
+  localStorage.setItem('vbook_req_role', name);
   
   document.getElementById('loginPasswordInput').value = '';
   document.getElementById('requestLogin').style.display = 'none';
@@ -1053,15 +1007,9 @@ document.getElementById('loginSubmitBtn').addEventListener('click', async () => 
   document.getElementById('reqUserName').innerText = name.toUpperCase();
   buildPassengerGrid();
   
-  // Logika Izin Akses Lokasi Sesuai Aturan Baru:
   const wasGranted = localStorage.getItem('vbook_loc_granted');
-  if (wasGranted === 'true') {
-    // Jika di awal sudah mengizinkan, tidak perlu reset / langsung verifikasi otomatis
-    verifyLocationPermissionState();
-  } else {
-    // Jika belum pernah atau sebelumnya menolak, munculkan kembali pilihan izin konfirmasi
-    verifyLocationPermissionState();
-  }
+  if (wasGranted === 'true') verifyLocationPermissionState();
+  else verifyLocationPermissionState();
   
   renderRequestTab();
 });
@@ -1069,30 +1017,20 @@ document.getElementById('loginSubmitBtn').addEventListener('click', async () => 
 document.getElementById('reqLogoutBtn').addEventListener('click', () => {
   writeLog(session.requestRole, "LOGOUT", "Requester keluar dari sesi aplikasi.");
   session.requestRole = null;
-  clearSession();
+  localStorage.removeItem('vbook_req_role');
   
-  // Jika di awal menolak akses lokasi, lakukan reset status izin di sini agar bisa minta ulang saat login berikutnya
   if (locationTestStatus === 'failed') {
     localStorage.removeItem('vbook_loc_granted');
     locationTestStatus = 'waiting';
   }
   
-  if (watchPositionId) {
-    navigator.geolocation.clearWatch(watchPositionId);
-    watchPositionId = null;
-  }
-  if (wakeLockObject) {
-    wakeLockObject.release().then(() => wakeLockObject = null);
-  }
+  if (watchPositionId) { navigator.geolocation.clearWatch(watchPositionId); watchPositionId = null; }
+  if (wakeLockObject) { wakeLockObject.release().then(() => wakeLockObject = null); }
   
   document.getElementById('requestApp').style.display = 'none';
   document.getElementById('requestLogin').style.display = 'block';
   initLoginSelect();
 });
-
-function saveSession(name){ localStorage.setItem('vbook_req_role', name); }
-function loadSession(){ return localStorage.getItem('vbook_req_role'); }
-function clearSession(){ localStorage.removeItem('vbook_req_role'); }
 
 function renderRequestTab(){
   if (!session.requestRole) return;
@@ -1119,16 +1057,13 @@ function renderRequestTab(){
     }
   }
   
-  // Render opsi slot jam
   const select = document.getElementById('slotSelect');
   const curVal = select.value;
   select.innerHTML = '';
   
   const tdk = dateKeyOf(targetDate);
   SLOT_HOURS.forEach(h => {
-    if (h === 12 || h === 13) return; // Istirahat baku
-    
-    // Periksa apakah slot sudah di-booking orang lain (Kecuali jika sedang dalam mode mengedit data sendiri)
+    if (h === 12 || h === 13) return;
     const taken = bookings.find(b => b.dateKey === tdk && b.startHour === h && b.id !== editingBookingId);
     const o = document.createElement('option');
     o.value = h;
@@ -1138,11 +1073,8 @@ function renderRequestTab(){
   });
   if(curVal) select.value = curVal;
 
-  // Proteksi visibilitas form request terikat window aturan jendela
   const inputs = ['slotSelect','keperluanSelect','keperluanLainnyaInput','nasabahInput','lokasiInput','gpsBtnReq'];
-  inputs.forEach(id => {
-    document.getElementById(id).disabled = !isOpen;
-  });
+  inputs.forEach(id => { document.getElementById(id).disabled = !isOpen; });
   document.querySelectorAll('.passenger-chk').forEach(c => c.disabled = !isOpen);
   
   const subBtn = document.getElementById('submitBookingBtn');
@@ -1156,12 +1088,10 @@ function renderRequestTab(){
   renderMyBookings();
 }
 
-// AKSI INPUT PADA FORM REQ
 ['nasabahInput','keperluanLainnyaInput'].forEach(id => {
   document.getElementById(id).addEventListener('input', updateSubmitEnabled);
 });
 
-// AKSI SUBMIT / UPDATE RESERVASI REQUESTER
 document.getElementById('submitBookingBtn').addEventListener('click', async () => {
   if (locationTestStatus !== 'verified') return;
   
@@ -1174,7 +1104,6 @@ document.getElementById('submitBookingBtn').addEventListener('click', async () =
   const lat = document.getElementById('lokasiInput').dataset.lat || "";
   const lng = document.getElementById('lokasiInput').dataset.lng || "";
   
-  // Jarak Estimasi Awal Otomatis muncul dikonversi dari Haversine koordinat maps target
   let distanceEst = 0;
   if (lat && lng) {
     distanceEst = parseFloat(calculateHaversineDistance(OFFICE_LAT, OFFICE_LNG, parseFloat(lat), parseFloat(lng)).toFixed(2));
@@ -1186,11 +1115,10 @@ document.getElementById('submitBookingBtn').addEventListener('click', async () =
   const formErr = document.getElementById('formError');
   formErr.style.display = 'none';
 
-  // Validasi Pemerataan Pemakaian (Maksimal 2 slot per hari untuk non-BM)
   if (session.requestRole !== 'BM' && !editingBookingId) {
     const userTodayCount = bookings.filter(b => b.dateKey === dateKeyOf(targetDate) && b.requester === session.requestRole).length;
     if (userTodayCount >= 2) {
-      formErr.innerText = "❌ Batas kuota harian terpenuhi! Non-BM maksimal melakukan 2 kali booking per hari demi pemerataan armada.";
+      formErr.innerText = "❌ Batas kuota harian terpenuhi! Non-BM maksimal melakukan 2 kali booking per hari.";
       formErr.style.display = 'block';
       return;
     }
@@ -1216,25 +1144,17 @@ document.getElementById('submitBookingBtn').addEventListener('click', async () =
   };
 
   if (FIREBASE_ENABLED) {
-    try {
-      await db.collection('bookings').doc(bookingId).set(payload);
-    } catch(e) { console.error(e); }
+    try { await db.collection('bookings').doc(bookingId).set(payload); } catch(e) { console.error(e); }
   } else {
-    if (editingBookingId) {
-      bookings = bookings.map(b => b.id === editingBookingId ? payload : b);
-    } else {
-      bookings.push(payload);
-    }
+    if (editingBookingId) bookings = bookings.map(b => b.id === editingBookingId ? payload : b);
+    else bookings.push(payload);
   }
 
   await writeLog(session.requestRole, editingBookingId ? "EDIT BOOKING" : "BUAT BOOKING", `Sesi jam ${fmtHM(slot)} - Nasabah: ${nasabah}`);
-  
-  // Reset Form state semula
   exitEditMode();
   renderAll();
 });
 
-// PROSEDUR EDIT / HAPUS BOOKING OLEH REQUESTER (Poin 1 Keinginan User)
 function triggerEditBooking(id) {
   const b = bookings.find(x => x.id === id);
   if (!b) return;
@@ -1257,7 +1177,6 @@ function triggerEditBooking(id) {
     document.getElementById('distanceEstimasiLabel').innerText = `Jarak Estimasi: ${b.distanceEstimasi} KM`;
   }
   
-  // Uncheck & recheck passenger grid
   document.querySelectorAll('.passenger-chk').forEach(chk => {
     chk.checked = b.passengers.includes(chk.value);
   });
@@ -1273,11 +1192,9 @@ async function triggerHapusBooking(id) {
   if (!b) return;
   if (!confirm(`Apakah Anda yakin ingin membatalkan/menghapus booking sesi jam ${fmtHM(b.startHour)}?`)) return;
   
-  if (FIREBASE_ENABLED) {
-    await db.collection('bookings').doc(id).delete().catch(e=>console.error(e));
-  } else {
-    bookings = bookings.filter(x => x.id !== id);
-  }
+  if (FIREBASE_ENABLED) await db.collection('bookings').doc(id).delete().catch(e=>console.error(e));
+  else bookings = bookings.filter(x => x.id !== id);
+  
   await writeLog(session.requestRole, "BATAL BOOKING", `Membatalkan sesi jam ${fmtHM(b.startHour)}`);
   renderAll();
 }
@@ -1317,7 +1234,6 @@ function renderMyBookings(){
     else if (b.status==='OVERTIME') stBadge=`<span class="badge overtime">OVERTIME</span>`;
     else if (b.status==='CLEARED') stBadge=`<span class="badge cleared">CLEARED</span>`;
     
-    // Tampilkan tombol Aksi Edit/Hapus jika status belum berjalan Cleared / Selesai
     let aksiHtml = '-';
     if (b.status !== 'CLEARED') {
       aksiHtml = `
@@ -1338,7 +1254,6 @@ function renderMyBookings(){
   });
 }
 
-// UBAH PASSWORD REQUESTER
 document.getElementById('pwdChangeBtn').addEventListener('click', async () => {
   const oldP = document.getElementById('pwdOldInput').value;
   const newP = document.getElementById('pwdNewInput').value;
@@ -1351,11 +1266,8 @@ document.getElementById('pwdChangeBtn').addEventListener('click', async () => {
   const realPass = requesterPasswords[session.requestRole] || '1234';
   if (oldP !== realPass){ msg.innerText = "Password lama Anda keliru!"; msg.style.color= 'var(--red)'; return; }
   
-  if (FIREBASE_ENABLED){
-    await db.collection('requesterPasswords').doc(session.requestRole).set({password: newP});
-  } else {
-    requesterPasswords[session.requestRole] = newP;
-  }
+  if (FIREBASE_ENABLED) await db.collection('requesterPasswords').doc(session.requestRole).set({password: newP});
+  else requesterPasswords[session.requestRole] = newP;
   
   await writeLog(session.requestRole, "CHANGE PWD", "Berhasil mengubah kunci autentikasi akun mandiri.");
   msg.innerText = "Password sukses diperbarui!";
@@ -1366,14 +1278,12 @@ document.getElementById('pwdChangeBtn').addEventListener('click', async () => {
 });
 
 /* ===================== ADMIN CONTROL PANEL INTERFACE ===================== */
-// MENANGANI EVENT CLUSTER PANEL ADMIN CLOCK FLICKER FIX (Poin 6)
 let adminSlotsInitialized = false;
 
 function initAdminSlotSelectOnlyOnce() {
-  if (adminSlotsInitialized) return; // Mencegah loop refresh kedap-kedip berulang
+  if (adminSlotsInitialized) return;
   const sel = document.getElementById('adminSlotSelect');
   sel.innerHTML = '';
-  // Force booking mencakup semua jam penuh 24 jam bebas tanpa hambatan (Poin 4)
   ALL_POSSIBLE_HOURS.forEach(h => {
     const o = document.createElement('option');
     o.value = h;
@@ -1383,52 +1293,55 @@ function initAdminSlotSelectOnlyOnce() {
   adminSlotsInitialized = true;
 }
 
+// LOGIN ADMIN MENGGUNAKAN EMAIL & PASSWORD TETAP SECARA OTOMATIS
+document.getElementById('adminAuthSubmitBtn').addEventListener('click', async () => {
+  const ps = document.getElementById('adminPassInput').value;
+  const lerr = document.getElementById('adminLoginError');
+  
+  if (!ps) { lerr.innerText = "Masukkan Password!"; lerr.style.display='block'; return; }
+  
+  if (FIREBASE_ENABLED) {
+    try {
+      // Menggunakan email terintegrasi langsung secara otomatis dari instruksi Anda
+      await auth.signInWithEmailAndPassword("admin@vbook.com", ps);
+      session.adminLoggedIn = true;
+      lerr.style.display='none';
+      await writeLog("ADMIN", "LOGIN", `Admin masuk via konsol otoritas.`);
+      renderAdminTab();
+    } catch(e) { 
+      lerr.innerText = "Otoritas gagal atau Password salah!"; 
+      lerr.style.display='block'; 
+    }
+  } else {
+    // Mode Fallback tanpa Firebase
+    if (ps === "17agustus1945") {
+      session.adminLoggedIn = true;
+      lerr.style.display='none';
+      renderAdminTab();
+    } else {
+      lerr.innerText = "Password Lokal Salah!"; lerr.style.display='block';
+    }
+  }
+});
+
 function renderAdminTab(){
-  // Setup interface login firebase admin auth token
-  const area = document.getElementById('adminAuthArea');
-  if (!FIREBASE_ENABLED){
-    renderAdminPanelApp();
+  if (!session.adminLoggedIn){
+    document.getElementById('adminLogin').style.display = 'block';
+    document.getElementById('adminApp').style.display = 'none';
     return;
   }
   
-  if (!session.adminLoggedIn){
-    area.innerHTML = `
-      <label>Email Admin</label><input type="text" id="adminEmailInput" placeholder="admin@srisp.com">
-      <label>Password</label><input type="password" id="adminPassInput" placeholder="••••">
-      <div style="margin-top:14px;"><button class="btn btn-primary btn-block" id="adminAuthSubmitBtn">Masuk Kendali Admin</button></div>
-    `;
-    document.getElementById('adminAuthSubmitBtn').addEventListener('click', async () => {
-      const em = document.getElementById('adminEmailInput').value.trim();
-      const ps = document.getElementById('adminPassInput').value;
-      const lerr = document.getElementById('adminLoginError');
-      try {
-        await auth.signInWithEmailAndPassword(em, ps);
-        session.adminLoggedIn = true;
-        session.adminEmail = em;
-        lerr.style.display='none';
-        writeLog("ADMIN", "LOGIN", `Admin masuk via konsol otoritas.`);
-        renderAdminTab();
-      } catch(e) { lerr.innerText = "Otoritas gagal: " + e.message; lerr.style.display='block'; }
-    });
-    return;
-  }
-  renderAdminPanelApp();
-}
-
-function renderAdminPanelApp(){
   document.getElementById('adminLogin').style.display = 'none';
   document.getElementById('adminApp').style.display = 'block';
   
-  initAdminSlotSelectOnlyOnce(); // Dipanggil secara aman terkontrol tanpa flicker
+  initAdminSlotSelectOnlyOnce();
 
-  // Bind Opsi User Select
   const uSel = document.getElementById('adminUserSelect');
   if (uSel.innerHTML === '') {
     uSel.innerHTML = '';
     REQUESTERS.forEach(r => { const o=document.createElement('option'); o.value=r; o.innerText=r.toUpperCase(); uSel.appendChild(o); });
   }
 
-  // Render Pilihan Override Jendela
   const rowOv = document.getElementById('overrideRow');
   rowOv.innerHTML = `
     <div class="override-opt ${overrideMode==='normal'?'active-normal':''}" onclick="setOverride('normal')">⚙️ NORMAL (WAKTU)</div>
@@ -1436,7 +1349,6 @@ function renderAdminPanelApp(){
     <div class="override-opt ${overrideMode==='forceClose'?'active-close':''}" onclick="setOverride('forceClose')">🔒 KUNCI MANUAL</div>
   `;
 
-  // Hitung Odometer & Servis Ban / Oli
   const totalKm = (bookings.concat(reportArchive)).reduce((acc,curr)=>acc+(curr.distanceReal||0), 0) + vehicleOdometerKm;
   document.getElementById('statTotalKm').innerText = totalKm.toFixed(1) + " KM";
   
@@ -1445,7 +1357,6 @@ function renderAdminPanelApp(){
   const tireLeft = TIRE_INTERVAL_KM - (totalKm % TIRE_INTERVAL_KM);
   document.getElementById('statTire').innerText = tireLeft.toFixed(1) + " KM Lagi";
 
-  // Render Log Tabel
   const lBody = document.getElementById('activityLogBody');
   lBody.innerHTML = '';
   activityLog.forEach(l => {
@@ -1459,7 +1370,6 @@ function renderAdminPanelApp(){
     lBody.appendChild(tr);
   });
 
-  // Render Semua Sesi Kontrol Tabel Admin
   const abBody = document.getElementById('adminBookingsBody');
   abBody.innerHTML = '';
   const sortedAll = [...bookings].sort((a,b)=>b.dateKey - a.dateKey || a.startHour - b.startHour);
@@ -1481,7 +1391,6 @@ function renderAdminPanelApp(){
     });
   }
 
-  // Render Manage Account Password
   const accWrap = document.getElementById('accountManageWrap');
   accWrap.innerHTML = '';
   REQUESTERS.forEach(r=>{
@@ -1496,7 +1405,6 @@ function renderAdminPanelApp(){
     accWrap.appendChild(div);
   });
 
-  // Render Live Map Monitor Link
   const mapWrap = document.getElementById('liveMapWrap');
   mapWrap.innerHTML = '';
   const liveSesi = bookings.filter(b=>b.status==='IN USE');
@@ -1517,17 +1425,15 @@ function renderAdminPanelApp(){
 
 async function setOverride(mode){
   overrideMode = mode;
-  if (FIREBASE_ENABLED){
-    await db.collection('settings').doc('system').set({ overrideMode }, {merge:true});
-  }
+  if (FIREBASE_ENABLED) await db.collection('settings').doc('system').set({ overrideMode }, {merge:true});
   await writeLog("ADMIN", "OVERRIDE WINDOW", `Mengubah status jendela menjadi: ${mode.toUpperCase()}`);
   renderAll();
 }
 
 async function forceDeleteBooking(id){
   if (!confirm("Otoritas Admin: Hapus paksa booking ini dari sistem?")) return;
-  if (FIREBASE_ENABLED){ await db.collection('bookings').doc(id).delete(); }
-  else { bookings = bookings.filter(b=>b.id!==id); }
+  if (FIREBASE_ENABLED) await db.collection('bookings').doc(id).delete();
+  else bookings = bookings.filter(b=>b.id!==id);
   await writeLog("ADMIN", "FORCE DELETE", `Menghapus paksa reservasi ID: ${id}`);
   renderAll();
 }
@@ -1535,20 +1441,17 @@ async function forceDeleteBooking(id){
 async function updateUserPassFromAdmin(user){
   const nv = document.getElementById(`passManage_${user}`).value.trim();
   if(!nv)return;
-  if (FIREBASE_ENABLED){
-    await db.collection('requesterPasswords').doc(user).set({password:nv});
-  } else { requesterPasswords[user] = nv; }
-  await writeLog("ADMIN", "RESET PASSWORD", `Mengubah kunci masuk ${user.toUpperCase()} menjadi: ${nv}`);
+  if (FIREBASE_ENABLED) await db.collection('requesterPasswords').doc(user).set({password:nv});
+  else requesterPasswords[user] = nv;
+  await writeLog("ADMIN", "RESET PASSWORD", `Mengubah kunci masuk ${user.toUpperCase()}`);
   alert(`Password ${user} sukses diubah!`);
   renderAll();
 }
 
-// BIND MAPS UNTUK FORCE BOOKING ADMIN (Poin 4 Keinginan User)
 document.getElementById('adminGpsBtn').addEventListener('click', () => {
   openMapsLocationPicker('adminLokasiInput', 'adminDistanceLabel');
 });
 
-// LOGIK MANUAL FORCE BOOKING OLEH ADMIN
 document.getElementById('adminCreateBtn').addEventListener('click', async () => {
   const tOpt = document.getElementById('adminDateSelect').value;
   const slot = parseInt(document.getElementById('adminSlotSelect').value);
@@ -1564,9 +1467,7 @@ document.getElementById('adminCreateBtn').addEventListener('click', async () => 
   if (tOpt === 'tomorrow') targetDate = startOfDay(addDays(now, 1));
   
   let distanceEst = 0;
-  if (lat && lng) {
-    distanceEst = parseFloat(calculateHaversineDistance(OFFICE_LAT, OFFICE_LNG, parseFloat(lat), parseFloat(lng)).toFixed(2));
-  }
+  if (lat && lng) distanceEst = parseFloat(calculateHaversineDistance(OFFICE_LAT, OFFICE_LNG, parseFloat(lat), parseFloat(lng)).toFixed(2));
 
   const bookingId = FIREBASE_ENABLED ? db.collection('bookings').doc().id : 'force_' + new Date().getTime();
   const payload = {
@@ -1587,13 +1488,11 @@ document.getElementById('adminCreateBtn').addEventListener('click', async () => 
     distanceReal: 0
   };
 
-  if (FIREBASE_ENABLED){
-    await db.collection('bookings').doc(bookingId).set(payload);
-  } else { bookings.push(payload); }
+  if (FIREBASE_ENABLED) await db.collection('bookings').doc(bookingId).set(payload);
+  else bookings.push(payload);
 
   await writeLog("ADMIN", "FORCE BOOKING", `Membuat paksa slot jam ${fmtHM(slot)} untuk ${user.toUpperCase()}`);
   
-  // Clear input form manual admin
   document.getElementById('adminKeperluanInput').value = '';
   document.getElementById('adminLokasiInput').value = '';
   delete document.getElementById('adminLokasiInput').dataset.lat;
@@ -1607,17 +1506,15 @@ document.getElementById('adminCreateBtn').addEventListener('click', async () => 
 document.getElementById('adminLogoutBtn').addEventListener('click', () => {
   if (FIREBASE_ENABLED) auth.signOut();
   session.adminLoggedIn = false;
-  session.adminEmail = null;
   document.getElementById('adminApp').style.display = 'none';
   document.getElementById('adminLogin').style.display = 'block';
+  document.getElementById('adminPassInput').value = '';
   renderAdminTab();
 });
 
-// AKSES RAHASIA ADMIN VIA FOOTER CLICK
 document.getElementById('footerCopyright').addEventListener('click', () => {
   document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.getElementById('view-admin').add;
   document.getElementById('view-admin').classList.add('active');
   activeTab = 'admin';
   renderAll();
@@ -1629,13 +1526,13 @@ function executePrint(title, filterFn){
   const filtered = allData.filter(filterFn).sort((a,b)=>a.dateKey-b.dateKey || a.startHour-b.startHour);
   
   document.getElementById('printReportTitle').innerText = title.toUpperCase();
-  document.getElementById('printReportMeta').innerText = `Dicetak pada: ${fmtDateTime(new Date())} — Total Record: ${filtered.length}`;
+  document.getElementById('printReportMeta').innerText = `Dicetak pada: ${fmtDateTime(new Date())}`;
   
   const pBody = document.getElementById('printReportBody');
   pBody.innerHTML = '';
   
   if (filtered.length===0){
-    pBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Tidak ada rekaman data operasional pada periode ini.</td></tr>';
+    pBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Tidak ada rekaman data.</td></tr>';
   } else {
     filtered.forEach(b=>{
       const tr = document.createElement('tr');
@@ -1660,15 +1557,15 @@ document.getElementById('reportDailyBtn').addEventListener('click', () => {
 });
 document.getElementById('reportWeeklyBtn').addEventListener('click', () => {
   const lookup = now.getTime() - (7 * 24 * 3600 * 1000);
-  executePrint(`Laporan Reservasi Mingguan (7 Hari Terakhir)`, b => b.dateKey >= lookup);
+  executePrint(`Laporan Reservasi Mingguan`, b => b.dateKey >= lookup);
 });
 document.getElementById('reportMonthlyBtn').addEventListener('click', () => {
-  executePrint(`Laporan Reservasi Bulanan — Bulan ${now.getMonth()+1}/${now.getFullYear()}`, b => {
+  executePrint(`Laporan Reservasi Bulanan`, b => {
     const d = new Date(b.dateKey); return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
   });
 });
 
-/* ===================== MASTER RENDER + CLOCK TICK ===================== */
+/* ===================== MASTER RENDER ===================== */
 function renderAll(){
   checkDailyReset();
   renderClock();
@@ -1682,9 +1579,8 @@ function renderAll(){
 initLoginSelect();
 initKeperluanSelect();
 
-// RESTORE SESSION DAN PERMISSION PERMANEN (Poin 3)
 function restoreSessionIfAny(){
-  const name = loadSession();
+  const name = localStorage.getItem('vbook_req_role');
   if (!name || !REQUESTERS.includes(name)) return;
   session.requestRole = name;
   document.getElementById('loginNameSelect').value = name;
@@ -1694,11 +1590,10 @@ function restoreSessionIfAny(){
   buildPassengerGrid();
   renderRequestTab();
   
-  // Ambil state permanen agar tidak melakukan tes ulang jika sebelumnya sudah granted
   const wasGranted = localStorage.getItem('vbook_loc_granted');
   if (wasGranted === 'true') {
     locationTestStatus = 'verified';
-    document.getElementById('locPermNote').innerHTML = "✅ Izin Valid (Sepanjang Waktu). Sesi otomatis tracking aktif.";
+    document.getElementById('locPermNote').innerHTML = "✅ Izin Valid. Sesi otomatis tracking aktif.";
     document.getElementById('locPermNote').style.color = "var(--green)";
     startAutomaticBackgroundTracking();
     updateSubmitEnabled();
