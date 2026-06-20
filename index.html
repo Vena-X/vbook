@@ -158,6 +158,7 @@
   .acc-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
   .acc-row .acc-name{width:64px;font-weight:700;color:var(--gold-soft);font-size:11.5px;text-transform:uppercase;flex-shrink:0;}
   .acc-row .acc-email{flex:1;min-width:140px;font-family:var(--mono);font-size:11px;color:var(--text-dim);}
+  .acc-row input{flex:1;min-width:140px;width:auto;}
   .log-scroll{max-height:320px;overflow-y:auto;}
   .report-row{display:flex;gap:8px;flex-wrap:wrap;}
   .stat-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
@@ -851,13 +852,7 @@ function renderReqAuthArea(){
     document.getElementById('loginSubmitBtn').addEventListener('click', doRequesterLogin);
     document.getElementById('forgotPasswordLink').addEventListener('click', async e => { e.preventDefault(); await triggerPasswordReset(reqProfileEmail); });
   } else {
-    area.innerHTML =
-      '<p class="note" style="margin-top:0;">Nama ini belum terdaftar. Daftarkan email &amp; password sekali untuk seterusnya.</p>'+
-      '<label>Email</label><input type="text" id="signupEmailInput" placeholder="EMAIL@CONTOH.COM" style="text-transform:none;">'+
-      '<label>Buat Password (Min. 6 Karakter)</label><input type="password" id="signupPasswordInput" placeholder="••••••">'+
-      '<label>Konfirmasi Password</label><input type="password" id="signupConfirmInput" placeholder="••••••">'+
-      '<div style="margin-top:18px;"><button class="btn btn-primary btn-block" id="signupSubmitBtn">Daftar &amp; Masuk</button></div>';
-    document.getElementById('signupSubmitBtn').addEventListener('click', doRequesterSignup);
+    area.innerHTML = '<p class="note" style="margin-top:0;">Akun untuk nama ini belum didaftarkan oleh Admin. Hubungi Admin untuk didaftarkan terlebih dahulu.</p>';
   }
 }
 async function doRequesterLogin(){
@@ -869,25 +864,6 @@ async function doRequesterLogin(){
     if (FIREBASE_ENABLED) await auth.signInWithEmailAndPassword(reqProfileEmail, pass);
     else { if (!localProfiles[name] || localProfiles[name].password !== pass) throw {code:'auth/wrong-password'}; }
     afterRequesterAuthed(name, reqProfileEmail);
-  }catch(e){ err.textContent = authErrorMessage(e); err.style.display = 'block'; }
-}
-async function doRequesterSignup(){
-  const name = document.getElementById('loginNameSelect').value;
-  const email = document.getElementById('signupEmailInput').value.trim();
-  const pass = document.getElementById('signupPasswordInput').value;
-  const conf = document.getElementById('signupConfirmInput').value;
-  const err = document.getElementById('loginError');
-  err.style.display = 'none';
-  if (!email || !email.includes('@')){ err.textContent='Email tidak valid.'; err.style.display='block'; return; }
-  if (pass.length < 6){ err.textContent='Password minimal 6 karakter.'; err.style.display='block'; return; }
-  if (pass !== conf){ err.textContent='Konfirmasi password tidak sama.'; err.style.display='block'; return; }
-  try{
-    if (FIREBASE_ENABLED){
-      await auth.createUserWithEmailAndPassword(email, pass);
-      await db.collection('requesterProfiles').doc(name).set({email});
-    } else { localProfiles[name] = {email, password:pass}; }
-    logActivity(name, 'DAFTAR AKUN', 'Akun requester didaftarkan dengan email '+email);
-    afterRequesterAuthed(name, email);
   }catch(e){ err.textContent = authErrorMessage(e); err.style.display = 'block'; }
 }
 function afterRequesterAuthed(name, email){
@@ -1232,6 +1208,26 @@ function statusBadgeAdmin(b,start,end){
   return '<span class="badge overtime">OVERTIME</span>';
 }
 
+/* ===================== ADMIN: PROVISION REQUESTER ACCOUNT ===================== */
+async function adminCreateRequesterAccount(name, email){
+  const tempPass = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  if (!FIREBASE_ENABLED){ localProfiles[name] = {email, password: tempPass}; return { ok:true }; }
+  let secondaryApp;
+  try{
+    secondaryApp = firebase.initializeApp(firebaseConfig, 'provision-'+Date.now());
+    const secondaryAuth = secondaryApp.auth();
+    await secondaryAuth.createUserWithEmailAndPassword(email, tempPass);
+    await secondaryAuth.sendPasswordResetEmail(email);
+    await secondaryAuth.signOut();
+    await db.collection('requesterProfiles').doc(name).set({email});
+    return { ok:true };
+  }catch(e){
+    return { ok:false, error: authErrorMessage(e) };
+  } finally {
+    if (secondaryApp) await secondaryApp.delete().catch(()=>{});
+  }
+}
+
 /* ===================== ADMIN: ACCOUNT MANAGEMENT (Firebase Auth, kirim email reset) ===================== */
 function renderAccountManager(){
   const wrap = document.getElementById('accountManageWrap');
@@ -1255,7 +1251,24 @@ function renderAccountManager(){
       btn.onclick = async () => { await triggerPasswordReset(email); logActivity('ADMIN','KIRIM RESET PASSWORD', name+' — '+email); };
       row.appendChild(btn);
     } else {
-      row.querySelector('.acc-email').textContent = 'BELUM TERDAFTAR';
+      row.querySelector('.acc-email').remove();
+      const input = document.createElement('input');
+      input.type = 'text'; input.placeholder = 'EMAIL REQUESTER'; input.style.textTransform = 'none';
+      input.id = 'provisionEmail_'+name;
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-primary btn-small'; btn.textContent = 'DAFTARKAN AKUN';
+      btn.onclick = async () => {
+        const val = input.value.trim();
+        if (!val || !val.includes('@')){ alert('Masukkan email yang valid untuk '+name+'.'); return; }
+        btn.disabled = true; btn.textContent = 'MEMPROSES...';
+        const result = await adminCreateRequesterAccount(name, val);
+        btn.disabled = false; btn.textContent = 'DAFTARKAN AKUN';
+        if (!result.ok){ alert('Gagal mendaftarkan akun: '+result.error); return; }
+        logActivity('ADMIN', 'DAFTARKAN AKUN REQUESTER', name+' — '+val+' (email set-password dikirim)');
+        alert('Akun untuk '+name+' berhasil didaftarkan. Email untuk mengatur password awal telah dikirim ke '+val+'.');
+        wrap.dataset.built = '0'; renderAccountManager();
+      };
+      row.appendChild(input); row.appendChild(btn);
     }
   });
 }
