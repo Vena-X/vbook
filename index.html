@@ -253,11 +253,14 @@
           </svg>
         </div>
         <div class="login-title">Masuk Sebagai Requester</div>
-        <div class="login-sub">Pilih nama Anda</div>
+        <div class="login-sub">Pilih nama Anda &amp; masukkan password</div>
         <label>Nama</label>
         <select id="loginNameSelect"><option value="" disabled selected>— PILIH NAMA —</option></select>
-        <div id="reqAuthArea"></div>
+        <label>Password</label>
+        <input type="password" id="loginPasswordInput" placeholder="••••">
+        <div style="margin-top:18px;"><button class="btn btn-primary btn-block" id="loginSubmitBtn">Masuk</button></div>
         <div class="login-error" id="loginError"></div>
+        <div class="note" style="text-align:center;margin-top:10px;">Lupa password? Hubungi Admin untuk direset.</div>
       </div>
     </div>
 
@@ -312,9 +315,14 @@
       </div>
 
       <div class="panel glass">
-        <h2>Keamanan Akun</h2>
-        <p class="note" style="margin-top:0;">Email terdaftar: <b id="reqAccountEmail" style="color:var(--gold-soft)">-</b></p>
-        <button class="btn btn-primary" id="pwdChangeBtn">Kirim Email Ubah Password</button>
+        <h2>Ubah Password Saya</h2>
+        <label>Password Lama</label>
+        <input type="password" id="pwdOldInput" placeholder="••••">
+        <label>Password Baru</label>
+        <input type="password" id="pwdNewInput" placeholder="••••">
+        <label>Konfirmasi Password Baru</label>
+        <input type="password" id="pwdConfirmInput" placeholder="••••">
+        <div style="margin-top:14px;"><button class="btn btn-primary" id="pwdChangeBtn">Ubah Password</button></div>
         <div class="note" id="pwdChangeMsg"></div>
       </div>
     </div>
@@ -395,8 +403,8 @@
       </div>
 
       <div class="panel glass">
-        <h2>Kelola Akun Requester</h2>
-        <p class="note" style="margin-top:0;">Kirim email reset password ke akun requester jika diminta (lupa password).</p>
+        <h2>Reset Password Requester</h2>
+        <p class="note" style="margin-top:0;">Set langsung password baru untuk requester yang lupa password — tidak perlu email.</p>
         <div id="accountManageWrap"></div>
       </div>
 
@@ -454,16 +462,15 @@ let vehicleOdometerKm = 0;
 let resetDoneForDateStr = null;
 let resetCheckInFlight = false;
 
-let session = { requestRole: null, requestEmail: null, adminLoggedIn: false, adminEmail: null };
+let session = { requestRole: null, adminLoggedIn: false, adminEmail: null };
 let overrideMode = 'normal';
 let activeTab = 'board';
 let lastTickerText = null;
 let reqSlotSig = null;
 let locationGranted = false;
 
-let reqProfileEmail = null, reqAuthMode = null;
+let requesterPasswords = {}; // name -> password, mirrored from Firestore 'requesterPasswords' (or local fallback)
 let adminProfileEmail = null, adminAuthMode = null, adminAuthChecked = false;
-let localProfiles = {};       // fallback only if Firebase fails to init (NOT secure, NOT persisted)
 let localAdminProfile = null; // fallback only if Firebase fails to init
 
 /* ===================== FIREBASE ===================== */
@@ -507,8 +514,26 @@ function subscribeFirebase(){
       renderAll();
     }
   }, err=>console.error('settings sync error', err));
+  db.collection('requesterPasswords').onSnapshot(snap=>{
+    snap.docs.forEach(d=>{ if (d.data().password) requesterPasswords[d.id] = d.data().password; });
+    if (activeTab==='admin') renderAdminTab();
+  }, err=>console.error('requesterPasswords sync error', err));
+}
+async function seedDefaultPasswords(){
+  if (!FIREBASE_ENABLED){
+    REQUESTERS.forEach(n => { if (!requesterPasswords[n]) requesterPasswords[n] = '1234'; });
+    return;
+  }
+  for (const name of REQUESTERS){
+    try{
+      const ref = db.collection('requesterPasswords').doc(name);
+      const snap = await ref.get();
+      if (!snap.exists) await ref.set({password:'1234'});
+    }catch(e){ console.error('seed password error', name, e); }
+  }
 }
 if (FIREBASE_ENABLED) subscribeFirebase();
+seedDefaultPasswords();
 
 /* ===================== TIME HELPERS ===================== */
 function pad(n){ return n.toString().padStart(2,'0'); }
@@ -619,6 +644,13 @@ async function setBookingStatus(b, status){
 async function setOverrideMode(mode){
   overrideMode = mode;
   if (FIREBASE_ENABLED){ try{ await db.collection('settings').doc('system').set({overrideMode:mode},{merge:true}); }catch(e){console.error(e);} }
+}
+async function setRequesterPassword(name, val){
+  if (FIREBASE_ENABLED){
+    try{ await db.collection('requesterPasswords').doc(name).set({password:val}); }catch(e){ return false; }
+  }
+  requesterPasswords[name] = val;
+  return true;
 }
 let lastOdoWrite = 0;
 function persistOdometer(){
@@ -818,56 +850,25 @@ function renderBoard(){
 }
 function msToClock(ms){ if (ms<0) ms=0; const t=Math.floor(ms/1000); return pad(Math.floor(t/60))+':'+pad(t%60); }
 
-/* ===================== REQUEST: NAME SELECT -> AUTH AREA ===================== */
+/* ===================== REQUEST: NAME SELECT -> DIRECT PASSWORD LOGIN ===================== */
 function initLoginSelect(){
   const sel = document.getElementById('loginNameSelect');
   REQUESTERS.forEach(name => { const opt=document.createElement('option'); opt.value=name; opt.textContent=name.toUpperCase(); sel.appendChild(opt); });
-  sel.addEventListener('change', onLoginNameChange);
+  sel.addEventListener('change', () => { document.getElementById('loginError').style.display = 'none'; });
 }
-async function onLoginNameChange(){
-  const name = document.getElementById('loginNameSelect').value;
-  document.getElementById('loginError').style.display = 'none';
-  if (!name) return;
-  const area = document.getElementById('reqAuthArea');
-  area.innerHTML = '<p class="note" style="margin-top:0;">Memeriksa akun...</p>';
-  let email = null;
-  try{
-    if (FIREBASE_ENABLED){
-      const snap = await db.collection('requesterProfiles').doc(name).get();
-      if (snap.exists) email = snap.data().email;
-    } else { email = localProfiles[name] ? localProfiles[name].email : null; }
-  }catch(e){ console.error(e); }
-  reqProfileEmail = email;
-  reqAuthMode = email ? 'login' : 'signup';
-  renderReqAuthArea();
-}
-function renderReqAuthArea(){
-  const area = document.getElementById('reqAuthArea');
-  if (reqAuthMode === 'login'){
-    area.innerHTML =
-      '<p class="note" style="margin-top:0;">Email terdaftar: <b style="color:var(--gold-soft)">'+escapeHtml(reqProfileEmail)+'</b></p>'+
-      '<label>Password</label><input type="password" id="loginPasswordInput" placeholder="••••">'+
-      '<div style="margin-top:18px;"><button class="btn btn-primary btn-block" id="loginSubmitBtn">Masuk</button></div>'+
-      '<div style="text-align:center;margin-top:10px;"><a href="#" id="forgotPasswordLink" style="color:var(--blue);font-size:11px;text-decoration:none;">Lupa Password?</a></div>';
-    document.getElementById('loginSubmitBtn').addEventListener('click', doRequesterLogin);
-    document.getElementById('forgotPasswordLink').addEventListener('click', async e => { e.preventDefault(); await triggerPasswordReset(reqProfileEmail); });
-  } else {
-    area.innerHTML = '<p class="note" style="margin-top:0;">Akun untuk nama ini belum didaftarkan oleh Admin. Hubungi Admin untuk didaftarkan terlebih dahulu.</p>';
-  }
-}
-async function doRequesterLogin(){
+document.getElementById('loginSubmitBtn').addEventListener('click', async () => {
   const name = document.getElementById('loginNameSelect').value;
   const pass = document.getElementById('loginPasswordInput').value;
   const err = document.getElementById('loginError');
   err.style.display = 'none';
-  try{
-    if (FIREBASE_ENABLED) await auth.signInWithEmailAndPassword(reqProfileEmail, pass);
-    else { if (!localProfiles[name] || localProfiles[name].password !== pass) throw {code:'auth/wrong-password'}; }
-    afterRequesterAuthed(name, reqProfileEmail);
-  }catch(e){ err.textContent = authErrorMessage(e); err.style.display = 'block'; }
-}
-function afterRequesterAuthed(name, email){
-  session.requestRole = name; session.requestEmail = email;
+  if (!name){ err.textContent = 'Pilih nama Anda.'; err.style.display = 'block'; return; }
+  if (requesterPasswords[name] === undefined){ err.textContent = 'Data password belum siap, coba beberapa saat lagi.'; err.style.display = 'block'; return; }
+  if (pass !== requesterPasswords[name]){ err.textContent = 'Password salah.'; err.style.display = 'block'; return; }
+  document.getElementById('loginPasswordInput').value = '';
+  afterRequesterAuthed(name);
+});
+function afterRequesterAuthed(name){
+  session.requestRole = name;
   reqSlotSig=null; locationGranted=false;
   buildPassengerGrid();
   logActivity(name, 'LOGIN REQUESTER', 'Berhasil login ke form request');
@@ -912,7 +913,6 @@ function renderRequestTab(){
   if (!loggedIn) return;
 
   document.getElementById('reqUserName').textContent = session.requestRole.toUpperCase();
-  document.getElementById('reqAccountEmail').textContent = session.requestEmail || '-';
 
   const windowOpen = effectiveWindowOpen();
   const banner = document.getElementById('reqStatusBanner');
@@ -1023,16 +1023,24 @@ document.getElementById('submitBookingBtn').addEventListener('click', async () =
 
 document.getElementById('reqLogoutBtn').addEventListener('click', () => {
   logActivity(session.requestRole, 'LOGOUT', '-');
-  if (FIREBASE_ENABLED) auth.signOut().catch(()=>{});
-  session.requestRole=null; session.requestEmail=null; reqSlotSig=null; locationGranted=false; stopTracking();
+  session.requestRole=null; reqSlotSig=null; locationGranted=false; stopTracking();
   document.getElementById('loginNameSelect').value='';
-  document.getElementById('reqAuthArea').innerHTML='';
+  document.getElementById('loginPasswordInput').value='';
   renderRequestTab();
 });
 document.getElementById('pwdChangeBtn').addEventListener('click', async () => {
+  const oldP = document.getElementById('pwdOldInput').value;
+  const newP = document.getElementById('pwdNewInput').value;
+  const confP = document.getElementById('pwdConfirmInput').value;
   const msg = document.getElementById('pwdChangeMsg');
-  await triggerPasswordReset(session.requestEmail);
-  msg.style.color='var(--green)'; msg.textContent='Email perubahan password telah dikirim.';
+  if (oldP !== requesterPasswords[session.requestRole]){ msg.style.color='var(--red)'; msg.textContent='Password lama salah.'; return; }
+  if (!newP || newP.length < 4){ msg.style.color='var(--red)'; msg.textContent='Password baru minimal 4 karakter.'; return; }
+  if (newP !== confP){ msg.style.color='var(--red)'; msg.textContent='Konfirmasi password tidak sama.'; return; }
+  const ok = await setRequesterPassword(session.requestRole, newP);
+  if (!ok){ msg.style.color='var(--red)'; msg.textContent='Gagal menyimpan ke server.'; return; }
+  logActivity(session.requestRole, 'UBAH PASSWORD', 'Password diperbarui oleh requester sendiri');
+  document.getElementById('pwdOldInput').value=''; document.getElementById('pwdNewInput').value=''; document.getElementById('pwdConfirmInput').value='';
+  msg.style.color='var(--green)'; msg.textContent='Password berhasil diubah.';
 });
 
 /* ===================== ADMIN: AUTH ===================== */
@@ -1208,69 +1216,29 @@ function statusBadgeAdmin(b,start,end){
   return '<span class="badge overtime">OVERTIME</span>';
 }
 
-/* ===================== ADMIN: PROVISION REQUESTER ACCOUNT ===================== */
-async function adminCreateRequesterAccount(name, email){
-  const tempPass = Math.random().toString(36).slice(2) + Date.now().toString(36);
-  if (!FIREBASE_ENABLED){ localProfiles[name] = {email, password: tempPass}; return { ok:true }; }
-  let secondaryApp;
-  try{
-    secondaryApp = firebase.initializeApp(firebaseConfig, 'provision-'+Date.now());
-    const secondaryAuth = secondaryApp.auth();
-    await secondaryAuth.createUserWithEmailAndPassword(email, tempPass);
-    await secondaryAuth.sendPasswordResetEmail(email);
-    await secondaryAuth.signOut();
-    await db.collection('requesterProfiles').doc(name).set({email});
-    return { ok:true };
-  }catch(e){
-    return { ok:false, error: authErrorMessage(e) };
-  } finally {
-    if (secondaryApp) await secondaryApp.delete().catch(()=>{});
-  }
-}
-
-/* ===================== ADMIN: ACCOUNT MANAGEMENT (Firebase Auth, kirim email reset) ===================== */
+/* ===================== ADMIN: RESET PASSWORD REQUESTER (langsung, tanpa email) ===================== */
 function renderAccountManager(){
   const wrap = document.getElementById('accountManageWrap');
   if (wrap.dataset.built === '1') return;
   wrap.dataset.built = '1';
-  wrap.innerHTML = REQUESTERS.map(name => '<div class="acc-row" id="accRow_'+name+'"><span class="acc-name">'+name.toUpperCase()+'</span><span class="acc-email" id="accEmail_'+name+'">Memeriksa...</span></div>').join('');
-  REQUESTERS.forEach(async name => {
-    let email = null;
-    try{
-      if (FIREBASE_ENABLED){
-        const snap = await db.collection('requesterProfiles').doc(name).get();
-        if (snap.exists) email = snap.data().email;
-      } else { email = localProfiles[name] ? localProfiles[name].email : null; }
-    }catch(e){ console.error(e); }
-    const row = document.getElementById('accRow_'+name);
-    if (!row) return;
-    if (email){
-      row.querySelector('.acc-email').textContent = email;
-      const btn = document.createElement('button');
-      btn.className = 'btn btn-ghost btn-small'; btn.textContent = 'KIRIM RESET PASSWORD';
-      btn.onclick = async () => { await triggerPasswordReset(email); logActivity('ADMIN','KIRIM RESET PASSWORD', name+' — '+email); };
-      row.appendChild(btn);
-    } else {
-      row.querySelector('.acc-email').remove();
-      const input = document.createElement('input');
-      input.type = 'text'; input.placeholder = 'EMAIL REQUESTER'; input.style.textTransform = 'none';
-      input.id = 'provisionEmail_'+name;
-      const btn = document.createElement('button');
-      btn.className = 'btn btn-primary btn-small'; btn.textContent = 'DAFTARKAN AKUN';
-      btn.onclick = async () => {
-        const val = input.value.trim();
-        if (!val || !val.includes('@')){ alert('Masukkan email yang valid untuk '+name+'.'); return; }
-        btn.disabled = true; btn.textContent = 'MEMPROSES...';
-        const result = await adminCreateRequesterAccount(name, val);
-        btn.disabled = false; btn.textContent = 'DAFTARKAN AKUN';
-        if (!result.ok){ alert('Gagal mendaftarkan akun: '+result.error); return; }
-        logActivity('ADMIN', 'DAFTARKAN AKUN REQUESTER', name+' — '+val+' (email set-password dikirim)');
-        alert('Akun untuk '+name+' berhasil didaftarkan. Email untuk mengatur password awal telah dikirim ke '+val+'.');
-        wrap.dataset.built = '0'; renderAccountManager();
-      };
-      row.appendChild(input); row.appendChild(btn);
-    }
-  });
+  wrap.innerHTML = REQUESTERS.map(name =>
+    '<div class="acc-row">'+
+      '<span class="acc-name">'+name.toUpperCase()+'</span>'+
+      '<input type="text" placeholder="PASSWORD BARU" id="resetPwd_'+name+'">'+
+      '<button class="btn btn-primary btn-small" data-reset="'+name+'">RESET</button>'+
+    '</div>'
+  ).join('');
+  wrap.querySelectorAll('[data-reset]').forEach(btn => btn.addEventListener('click', async () => {
+    const name = btn.dataset.reset;
+    const input = document.getElementById('resetPwd_'+name);
+    const val = input.value.trim();
+    if (!val){ alert('Isi password baru untuk '+name+' terlebih dahulu.'); return; }
+    const ok = await setRequesterPassword(name, val);
+    if (!ok){ alert('Gagal menyimpan ke server.'); return; }
+    input.value = '';
+    logActivity('ADMIN', 'RESET PASSWORD', 'Password '+name+' diperbarui oleh admin');
+    alert('Password untuk '+name+' berhasil direset.');
+  }));
 }
 
 /* ===================== ADMIN: ACTIVITY LOG ===================== */
