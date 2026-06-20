@@ -25,8 +25,11 @@
   body::after{width:560px;height:560px;background:#1E5AA8;opacity:.22;bottom:-180px;right:-140px;}
   ::-webkit-scrollbar{height:6px;width:6px;}
   ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:4px;}
-  .glass{ background:var(--glass-bg); backdrop-filter:blur(20px) saturate(140%); -webkit-backdrop-filter:blur(20px) saturate(140%);
-    border:1px solid var(--glass-border); box-shadow:0 10px 34px rgba(0,0,0,.28); }
+  .glass{
+    background:linear-gradient(160deg, rgba(255,255,255,.055), rgba(255,255,255,.018));
+    border:1px solid rgba(217,182,92,.16);
+    box-shadow:0 10px 28px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.05);
+  }
 
   header{ position:sticky;top:0;z-index:50; border-radius:0 0 14px 14px; margin:0 auto;max-width:1180px; }
   .header-inner{ display:flex;align-items:center;justify-content:space-between; padding:8px 16px;gap:12px;flex-wrap:wrap; }
@@ -287,12 +290,20 @@
 
             <label>Nama Nasabah *</label>
             <input type="text" id="nasabahInput" placeholder="CONTOH: PT SUMBER MAKMUR">
+
+            <label>Izin Akses Lokasi (Untuk Tracking) *</label>
+            <div class="note" id="locPermNote" style="margin-top:0;">Memeriksa izin lokasi...</div>
           </div>
           <div>
             <label>Lokasi Tujuan (Opsional)</label>
             <div class="input-with-btn">
               <input type="text" id="lokasiInput" placeholder="ALAMAT TUJUAN">
               <button class="btn btn-gps btn-small" id="gpsBtnReq" type="button">📍 GPS</button>
+            </div>
+            <div id="lokasiPreviewWrap" style="display:none;margin-top:8px;">
+              <a class="maps-embed-link" id="lokasiPreviewLink" target="_blank" rel="noopener" href="#">
+                <iframe class="maps-embed" id="lokasiPreviewFrame" src="" loading="lazy"></iframe>
+              </a>
             </div>
 
             <label>Penumpang (Opsional)</label>
@@ -680,6 +691,18 @@ function geoErrorMessage(err){
   if (err && err.code === 3) return 'Permintaan lokasi GPS time-out. Coba lagi, atau isi alamat manual.';
   return 'Gagal mengambil lokasi GPS. Isi alamat manual.';
 }
+function updateLokasiPreview(){
+  const input = document.getElementById('lokasiInput');
+  const val = input.value.trim();
+  const wrap = document.getElementById('lokasiPreviewWrap');
+  if (!val){ wrap.style.display = 'none'; return; }
+  const link = input.dataset.mapsurl || mapsSearchLink(val);
+  let q = val;
+  if (input.dataset.mapsurl){ const m = input.dataset.mapsurl.match(/q=([^&]+)/); if (m) q = decodeURIComponent(m[1]); }
+  document.getElementById('lokasiPreviewFrame').src = 'https://maps.google.com/maps?q='+encodeURIComponent(q)+'&z=15&output=embed';
+  document.getElementById('lokasiPreviewLink').href = link;
+  wrap.style.display = 'block';
+}
 function bindGpsButton(btnId, inputId){
   document.getElementById(btnId).addEventListener('click', () => {
     if (!window.isSecureContext){ alert('GPS hanya berfungsi pada koneksi HTTPS. Setelah di-deploy ke GitHub Pages (otomatis HTTPS), GPS akan berfungsi. Untuk saat ini, isi alamat manual.'); return; }
@@ -691,15 +714,24 @@ function bindGpsButton(btnId, inputId){
       input.value = ('LAT ' + lat + ', LNG ' + lng + ' (GPS)').toUpperCase();
       input.dataset.mapsurl = mapsCoordLink(lat,lng);
       input.placeholder = oldPh;
+      updateLokasiPreview();
     }, err => { input.placeholder = oldPh; alert(geoErrorMessage(err)); }, { enableHighAccuracy:true, timeout:8000, maximumAge:0 });
   });
 }
+function setLocPermNote(state){
+  const el = document.getElementById('locPermNote');
+  if (!el) return;
+  if (state === 'checking'){ el.textContent = 'Memeriksa izin lokasi...'; el.style.color = ''; }
+  else if (state === 'granted'){ el.textContent = '✅ Akses lokasi diizinkan — tracking kendaraan aktif saat sesi berjalan.'; el.style.color = 'var(--green)'; }
+  else { el.textContent = '❌ Akses lokasi ditolak/tidak tersedia. Aktifkan izin lokasi untuk browser ini di pengaturan HP, lalu refresh halaman.'; el.style.color = 'var(--red)'; }
+}
 function requestLocationPermission(){
+  setLocPermNote('checking');
   return new Promise(resolve => {
-    if (!window.isSecureContext || !navigator.geolocation){ locationGranted = false; resolve(false); return; }
+    if (!window.isSecureContext || !navigator.geolocation){ locationGranted = false; setLocPermNote('denied'); resolve(false); return; }
     navigator.geolocation.getCurrentPosition(
-      () => { locationGranted = true; resolve(true); },
-      () => { locationGranted = false; resolve(false); },
+      () => { locationGranted = true; setLocPermNote('granted'); resolve(true); },
+      () => { locationGranted = false; setLocPermNote('denied'); resolve(false); },
       { enableHighAccuracy:true, timeout:8000, maximumAge:0 }
     );
   });
@@ -867,10 +899,28 @@ document.getElementById('loginSubmitBtn').addEventListener('click', async () => 
   document.getElementById('loginPasswordInput').value = '';
   afterRequesterAuthed(name);
 });
+/* ===================== SESSION PERSISTENCE (supaya tracking tidak putus saat refresh) ===================== */
+const SESSION_KEY = 'vbook_session';
+function saveSession(name){
+  try{ localStorage.setItem(SESSION_KEY, JSON.stringify({ name, day: startOfDay(new Date()).toDateString() })); }catch(e){}
+}
+function loadSession(){
+  try{
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const obj = JSON.parse(raw);
+    if (obj.day !== startOfDay(new Date()).toDateString()) return null;
+    if (new Date().getHours() >= 18) return null;
+    return obj.name;
+  }catch(e){ return null; }
+}
+function clearSession(){ try{ localStorage.removeItem(SESSION_KEY); }catch(e){} }
+
 function afterRequesterAuthed(name){
   session.requestRole = name;
   reqSlotSig=null; locationGranted=false;
   buildPassengerGrid();
+  saveSession(name);
   logActivity(name, 'LOGIN REQUESTER', 'Berhasil login ke form request');
   renderRequestTab();
   requestLocationPermission().then(updateSubmitEnabled);
@@ -1016,6 +1066,7 @@ document.getElementById('submitBookingBtn').addEventListener('click', async () =
   document.getElementById('keperluanLainnyaInput').value='';
   document.getElementById('keperluanLainnyaWrap').style.display='none';
   lokasiInput.value=''; delete lokasiInput.dataset.mapsurl;
+  document.getElementById('lokasiPreviewWrap').style.display = 'none';
   document.querySelectorAll('#passengerGrid input:checked').forEach(i=>i.checked=false);
   reqSlotSig = null;
   renderAll();
@@ -1023,6 +1074,7 @@ document.getElementById('submitBookingBtn').addEventListener('click', async () =
 
 document.getElementById('reqLogoutBtn').addEventListener('click', () => {
   logActivity(session.requestRole, 'LOGOUT', '-');
+  clearSession();
   session.requestRole=null; reqSlotSig=null; locationGranted=false; stopTracking();
   document.getElementById('loginNameSelect').value='';
   document.getElementById('loginPasswordInput').value='';
@@ -1401,6 +1453,8 @@ async function doDailyReset(todayStr){
     boardBuiltDateKey = null; reqSlotSig = null;
     logActivity('SYSTEM','RESET HARIAN','Data sesi hari ini diarsipkan ke laporan & sesi direset otomatis jam 18:00');
   }
+  clearSession();
+  if (session.requestRole){ stopTracking(); session.requestRole = null; reqSlotSig = null; locationGranted = false; renderRequestTab(); }
 }
 
 /* ===================== TAB SWITCHING ===================== */
@@ -1438,6 +1492,20 @@ initKeperluanSelect();
 bindGpsButton('gpsBtnReq','lokasiInput');
 ['nasabahInput','lokasiInput','keperluanLainnyaInput','adminKeperluanInput'].forEach(bindUppercase);
 ['nasabahInput','keperluanLainnyaInput'].forEach(id => document.getElementById(id).addEventListener('input', updateSubmitEnabled));
+document.getElementById('lokasiInput').addEventListener('change', () => { delete document.getElementById('lokasiInput').dataset.mapsurl; updateLokasiPreview(); });
+document.getElementById('lokasiInput').addEventListener('blur', updateLokasiPreview);
+
+function restoreSessionIfAny(){
+  const name = loadSession();
+  if (!name || !REQUESTERS.includes(name)) return;
+  session.requestRole = name;
+  reqSlotSig = null; locationGranted = false;
+  document.getElementById('loginNameSelect').value = name;
+  buildPassengerGrid();
+  renderRequestTab();
+  requestLocationPermission().then(updateSubmitEnabled);
+}
+restoreSessionIfAny();
 
 setInterval(() => { now = new Date(); renderAll(); }, 1000);
 renderAll();
