@@ -309,9 +309,12 @@
 
       <div class="panel glass">
         <h2>Booking Saya</h2>
+        <div class="stat-row" style="margin-top:0;margin-bottom:12px;">
+          <div class="stat-card"><div class="stat-label">Total Jarak Request Anda</div><div class="stat-value" id="myTotalKm">0.0 KM</div></div>
+        </div>
         <div style="overflow-x:auto;">
         <table>
-          <thead><tr><th>Tanggal</th><th>Sesi</th><th>Keperluan</th><th>Status</th><th>Aksi</th></tr></thead>
+          <thead><tr><th>Tanggal</th><th>Sesi</th><th>Keperluan</th><th>Jarak (KM)</th><th>Status</th><th>Aksi</th></tr></thead>
           <tbody id="myBookingsBody"></tbody>
         </table>
         </div>
@@ -1161,10 +1164,13 @@ function renderRequestTab(){
 function renderMyBookings(){
   const body = document.getElementById('myBookingsBody');
   const mine = bookings.filter(b => b.requester===session.requestRole && b.status!=='CANCELLED').sort((a,b)=>a.dateKey-b.dateKey||a.startHour-b.startHour);
-  const sig = mine.map(b=>b.id+':'+b.status+':'+statusBadge(b)).join(',');
+  const allMineEver = reportArchive.concat(bookings).filter(b => b.requester===session.requestRole && b.status!=='CANCELLED');
+  const totalKm = allMineEver.reduce((sum,b) => sum + (b.trackedDistanceKm||0), 0);
+  document.getElementById('myTotalKm').textContent = totalKm.toFixed(1) + ' KM';
+  const sig = mine.map(b=>b.id+':'+b.status+':'+statusBadge(b)+':'+(b.trackedDistanceKm||0)).join(',');
   if (body.dataset.cache === sig) return;
   body.dataset.cache = sig; body.innerHTML = '';
-  if (mine.length===0){ body.innerHTML='<tr><td colspan="5" class="empty-state">BELUM ADA BOOKING</td></tr>'; return; }
+  if (mine.length===0){ body.innerHTML='<tr><td colspan="6" class="empty-state">BELUM ADA BOOKING</td></tr>'; return; }
   mine.forEach(b => {
     const start = slotStartDate(b.dateKey,b.startHour);
     const canEdit = b.status==='BOOKED' && now < start;
@@ -1173,7 +1179,8 @@ function renderMyBookings(){
     let actionHtml = '-';
     if (canEdit) actionHtml = '<button class="btn btn-ghost btn-small" data-edit="'+b.id+'">EDIT</button> <button class="btn btn-danger btn-small" data-mycancel="'+b.id+'">BATALKAN</button>';
     else if (canFinish) actionHtml = '<button class="btn btn-primary btn-small" data-finish="'+b.id+'">SELESAI / KENDARAAN KEMBALI</button>';
-    tr.innerHTML = '<td>'+fmtDateLabel(new Date(b.dateKey))+'</td><td>'+fmtHM(b.startHour)+'–'+fmtHM(b.endHour)+'</td><td>'+escapeHtml(b.keperluan)+'</td><td>'+statusBadge(b)+'</td>'+
+    tr.innerHTML = '<td>'+fmtDateLabel(new Date(b.dateKey))+'</td><td>'+fmtHM(b.startHour)+'–'+fmtHM(b.endHour)+'</td><td>'+escapeHtml(b.keperluan)+'</td>'+
+      '<td>'+(b.trackedDistanceKm?b.trackedDistanceKm.toFixed(1):'-')+'</td><td>'+statusBadge(b)+'</td>'+
       '<td style="white-space:nowrap;">'+actionHtml+'</td>';
     body.appendChild(tr);
   });
