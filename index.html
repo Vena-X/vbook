@@ -6,9 +6,9 @@
 <title>V-BOOK — Booking Mobil Operasional</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=IBM+Plex+Mono:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<!-- ===== FIREBASE (opsional). Isi firebaseConfig di bagian skrip paling bawah untuk mengaktifkan realtime sync. ===== -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <style>
   :root{
     --gold:#D9B65C; --gold-soft:#F0D899; --green:#3EDB8F; --red:#FF7B83; --blue:#6FB3FF;
@@ -95,7 +95,7 @@
   .login-card .brand-mark{width:50px;height:50px;margin:0 auto 14px;}
   .login-card .brand-mark svg{width:28px;height:28px;}
   .login-title{text-align:center;font-family:var(--serif);font-size:19px;color:var(--gold-soft);margin-bottom:4px;}
-  .login-sub{text-align:center;font-size:11px;color:var(--text-dim);margin-bottom:20px;letter-spacing:.3px;}
+  .login-sub{text-align:center;font-size:11px;color:var(--text-dim);margin-bottom:14px;letter-spacing:.3px;}
 
   .status-banner{ display:flex;align-items:center;gap:10px; padding:11px 14px;border-radius:12px;margin-bottom:16px;
     font-size:11.5px;font-family:var(--mono);font-weight:600;letter-spacing:.3px; }
@@ -125,7 +125,6 @@
   .btn-ghost:hover{color:var(--text);border-color:rgba(255,255,255,.3);}
   .btn-danger{background:rgba(255,123,131,.12);color:var(--red);border:1px solid rgba(255,123,131,.35);}
   .btn-gps{background:rgba(111,179,255,.12);color:var(--blue);border:1px solid rgba(111,179,255,.35);white-space:nowrap;}
-  .btn-loc{background:rgba(62,219,143,.12);color:var(--green);border:1px solid rgba(62,219,143,.35);white-space:nowrap;}
   .btn-small{padding:7px 11px;font-size:10.5px;border-radius:8px;}
   .btn-block{width:100%;}
   .topbar-session{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
@@ -145,7 +144,7 @@
   .badge.cleared{background:rgba(255,255,255,.08);color:var(--text-dim);}
 
   .override-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
-  .override-opt{ flex:1;min-width:140px;border:1px solid var(--glass-border);background:rgba(255,255,255,.03);
+  .override-opt{ flex:1;min-width:120px;border:1px solid var(--glass-border);background:rgba(255,255,255,.03);
     border-radius:10px;padding:11px;cursor:pointer;text-align:center;font-size:11.5px;font-weight:700; text-transform:uppercase;letter-spacing:.4px; }
   .override-opt.active-normal{border-color:rgba(255,255,255,.4);color:var(--text);}
   .override-opt.active-open{border-color:var(--green);color:var(--green);background:rgba(62,219,143,.08);}
@@ -156,15 +155,16 @@
   .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;}
   @media (max-width:600px){.form-grid{grid-template-columns:1fr;}}
 
-  .pwd-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
-  .pwd-row .pwd-name{width:64px;font-weight:700;color:var(--gold-soft);font-size:11.5px;text-transform:uppercase;flex-shrink:0;}
-  .pwd-row input{flex:1;min-width:120px;}
+  .acc-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+  .acc-row .acc-name{width:64px;font-weight:700;color:var(--gold-soft);font-size:11.5px;text-transform:uppercase;flex-shrink:0;}
+  .acc-row .acc-email{flex:1;min-width:140px;font-family:var(--mono);font-size:11px;color:var(--text-dim);}
   .log-scroll{max-height:320px;overflow-y:auto;}
   .report-row{display:flex;gap:8px;flex-wrap:wrap;}
   .stat-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
   .stat-card{flex:1;min-width:150px;background:rgba(0,0,0,.18);border:1px solid var(--glass-border);border-radius:12px;padding:12px 14px;}
   .stat-card .stat-label{font-size:9.5px;color:var(--text-dim-2);text-transform:uppercase;letter-spacing:.5px;}
   .stat-card .stat-value{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--gold-soft);margin-top:3px;}
+  #liveMapWrap{display:flex;flex-wrap:wrap;gap:12px;}
 
   footer{ max-width:1180px;margin:14px auto 24px;padding:14px 20px;border-radius:16px;
     text-align:center;font-size:10.5px;color:var(--text-dim-2);letter-spacing:.6px;position:relative;z-index:1;
@@ -252,13 +252,11 @@
           </svg>
         </div>
         <div class="login-title">Masuk Sebagai Requester</div>
-        <div class="login-sub">Pilih nama Anda &amp; masukkan password</div>
+        <div class="login-sub">Pilih nama Anda</div>
         <label>Nama</label>
         <select id="loginNameSelect"><option value="" disabled selected>— PILIH NAMA —</option></select>
-        <label>Password</label>
-        <input type="password" id="loginPasswordInput" placeholder="••••">
-        <div style="margin-top:18px;"><button class="btn btn-primary btn-block" id="loginSubmitBtn">Masuk</button></div>
-        <div class="login-error" id="loginError">Nama atau password salah.</div>
+        <div id="reqAuthArea"></div>
+        <div class="login-error" id="loginError"></div>
       </div>
     </div>
 
@@ -277,9 +275,7 @@
             <select id="slotSelect"></select>
 
             <label>Keperluan *</label>
-            <select id="keperluanSelect">
-              <option value="" disabled selected>— PILIH KEPERLUAN —</option>
-            </select>
+            <select id="keperluanSelect"><option value="" disabled selected>— PILIH KEPERLUAN —</option></select>
             <div id="keperluanLainnyaWrap" style="display:none;">
               <label>Keterangan Lainnya (Wajib Diisi) *</label>
               <input type="text" id="keperluanLainnyaInput" placeholder="JELASKAN KEPERLUAN">
@@ -315,14 +311,9 @@
       </div>
 
       <div class="panel glass">
-        <h2>Ubah Password Saya</h2>
-        <label>Password Lama</label>
-        <input type="password" id="pwdOldInput" placeholder="••••">
-        <label>Password Baru</label>
-        <input type="password" id="pwdNewInput" placeholder="••••">
-        <label>Konfirmasi Password Baru</label>
-        <input type="password" id="pwdConfirmInput" placeholder="••••">
-        <div style="margin-top:14px;"><button class="btn btn-primary" id="pwdChangeBtn">Ubah Password</button></div>
+        <h2>Keamanan Akun</h2>
+        <p class="note" style="margin-top:0;">Email terdaftar: <b id="reqAccountEmail" style="color:var(--gold-soft)">-</b></p>
+        <button class="btn btn-primary" id="pwdChangeBtn">Kirim Email Ubah Password</button>
         <div class="note" id="pwdChangeMsg"></div>
       </div>
     </div>
@@ -334,11 +325,8 @@
       <div class="page-title"><h1>Admin Panel</h1></div>
       <div class="panel glass login-card">
         <div class="login-title">Akses Admin</div>
-        <div class="login-sub">Masukkan password admin</div>
-        <label>Password</label>
-        <input type="password" id="adminPasswordInput" placeholder="••••••••">
-        <div style="margin-top:18px;"><button class="btn btn-primary btn-block" id="adminLoginBtn">Masuk</button></div>
-        <div class="login-error" id="adminLoginError">Password salah.</div>
+        <div id="adminAuthArea"><p class="note">Memeriksa akun admin...</p></div>
+        <div class="login-error" id="adminLoginError"></div>
       </div>
     </div>
 
@@ -349,13 +337,34 @@
       </div>
 
       <div class="panel glass">
+        <h2>Lokasi Kendaraan Real-Time</h2>
+        <p class="note" style="margin-top:0;">Aktif otomatis selama sesi requester sedang IN USE, mengikuti perangkat requester.</p>
+        <div id="liveMapWrap"></div>
+      </div>
+
+      <div class="panel glass">
         <h2>Acuan Servis Kendaraan (Dari Tracking GPS Sesi Aktif)</h2>
         <div class="stat-row">
           <div class="stat-card"><div class="stat-label">Total Jarak Tercatat</div><div class="stat-value" id="statTotalKm">0.0 KM</div></div>
           <div class="stat-card"><div class="stat-label">Sisa s/d Servis Oli (5.000 KM)</div><div class="stat-value" id="statOil">-</div></div>
           <div class="stat-card"><div class="stat-label">Sisa s/d Ganti Ban (20.000 KM)</div><div class="stat-value" id="statTire">-</div></div>
         </div>
-        <p class="note">Tracking jarak berjalan otomatis dari perangkat requester saat sesi sedang IN USE, lalu berhenti otomatis saat sesi berakhir.</p>
+      </div>
+
+      <div class="panel glass">
+        <h2>Riwayat &amp; Rekap Jarak Kendaraan</h2>
+        <div class="report-row" id="rekapRangeRow"></div>
+        <div style="overflow-x:auto;margin-top:12px;">
+          <table>
+            <thead><tr><th>Hari/Tanggal</th><th>Sesi</th><th>Requester</th><th>Asal</th><th>Tujuan</th><th>Jarak (KM)</th></tr></thead>
+            <tbody id="rekapDetailBody"></tbody>
+          </table>
+        </div>
+        <h2 style="margin-top:18px;">Total Jarak per Requester</h2>
+        <table>
+          <thead><tr><th>Requester</th><th>Total Jarak (KM)</th></tr></thead>
+          <tbody id="rekapTotalBody"></tbody>
+        </table>
       </div>
 
       <div class="panel glass">
@@ -366,7 +375,7 @@
 
       <div class="panel glass">
         <h2>Buat Sesi Manual (Force Booking)</h2>
-        <p class="note" style="margin-top:0;">Override ini melewati aturan jendela waktu dan kebijakan pemerataan pemakaian — gunakan hanya untuk kebutuhan darurat.</p>
+        <p class="note" style="margin-top:0;">Override ini melewati aturan jendela waktu dan kebijakan pemerataan pemakaian. Tracking lokasi tetap wajib diizinkan.</p>
         <div class="form-grid">
           <div>
             <label>Tanggal</label>
@@ -385,9 +394,9 @@
       </div>
 
       <div class="panel glass">
-        <h2>Kelola Password Requester</h2>
-        <p class="note" style="margin-top:0;">Reset password akun requester jika lupa atau perlu diganti.</p>
-        <div id="pwdManageWrap"></div>
+        <h2>Kelola Akun Requester</h2>
+        <p class="note" style="margin-top:0;">Kirim email reset password ke akun requester jika diminta (lupa password).</p>
+        <div id="accountManageWrap"></div>
       </div>
 
       <div class="panel glass">
@@ -400,7 +409,7 @@
 
       <div class="panel glass">
         <h2>Log Aktivitas</h2>
-        <p class="note" style="margin-top:0;">Riwayat login, ubah password, &amp; aktivitas request — terbaru di atas.</p>
+        <p class="note" style="margin-top:0;">Riwayat login, akun, &amp; aktivitas request — terbaru di atas.</p>
         <div class="log-scroll">
           <table>
             <thead><tr><th>Waktu</th><th>Nama</th><th>Aktivitas</th><th>Detail</th></tr></thead>
@@ -433,9 +442,7 @@ const PASSENGERS = ['OM','Novi','Vica','HFO','AOC','BM','CS','Security','Teller'
 const SLOT_HOURS = [9,10,11,14,15,16,17];
 const KEPERLUAN_OPTIONS = ['VISIT NASABAH','AKAD PEMBIAYAAN','JOIN VISIT','TUKAP','SERVICE KENDARAAN','KLIRING','AKTIFITAS BM','LAINNYA'];
 const OIL_INTERVAL_KM = 5000, TIRE_INTERVAL_KM = 20000;
-
-let passwords = { BM:'1234', OM:'1234', Novi:'1234', Vika:'1234' };
-let adminPassword = 'admin2026';
+const OFFICE_MAPS_LINK = 'https://maps.app.goo.gl/aPCWmG8mEWncxVhi8';
 
 let now = new Date();
 let bookings = [];
@@ -446,12 +453,17 @@ let vehicleOdometerKm = 0;
 let resetDoneForDateStr = null;
 let resetCheckInFlight = false;
 
-let session = { requestRole: null, adminLoggedIn: false };
+let session = { requestRole: null, requestEmail: null, adminLoggedIn: false, adminEmail: null };
 let overrideMode = 'normal';
 let activeTab = 'board';
 let lastTickerText = null;
 let reqSlotSig = null;
 let locationGranted = false;
+
+let reqProfileEmail = null, reqAuthMode = null;
+let adminProfileEmail = null, adminAuthMode = null, adminAuthChecked = false;
+let localProfiles = {};       // fallback only if Firebase fails to init (NOT secure, NOT persisted)
+let localAdminProfile = null; // fallback only if Firebase fails to init
 
 /* ===================== FIREBASE ===================== */
 const firebaseConfig = {
@@ -463,11 +475,12 @@ const firebaseConfig = {
   appId: "1:375153255421:web:ac5026af3d714920f3ef94"
 };
 let FIREBASE_ENABLED = false;
-let db = null;
+let db = null, auth = null;
 try{
   if (firebaseConfig.apiKey && typeof firebase !== 'undefined'){
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
+    auth = firebase.auth();
     FIREBASE_ENABLED = true;
   }
 }catch(e){ console.error('Firebase gagal diinisialisasi.', e); FIREBASE_ENABLED = false; }
@@ -481,9 +494,6 @@ function subscribeFirebase(){
   db.collection('archivedBookings').onSnapshot(snap=>{
     reportArchive = snap.docs.map(d=>d.data());
   }, err=>console.error('archive sync error', err));
-  db.collection('passwords').onSnapshot(snap=>{
-    snap.docs.forEach(d=>{ if (d.data().password) passwords[d.id] = d.data().password; });
-  }, err=>console.error('passwords sync error', err));
   db.collection('activityLog').orderBy('time','desc').limit(150).onSnapshot(snap=>{
     activityLog = snap.docs.map(d=>d.data());
     if (activeTab==='admin') renderAdminTab();
@@ -533,6 +543,7 @@ function buildSlotsForDate(date){
 }
 function slotStartDate(dateKey, hour){ const d = new Date(dateKey); d.setHours(hour,0,0,0); return d; }
 function slotEndDate(dateKey, hour){ const d = new Date(dateKey); d.setHours(hour+1,0,0,0); return d; }
+function escapeHtml(str){ const d=document.createElement('div'); d.textContent = str==null?'':str; return d.innerHTML; }
 
 /* ===================== ACTIVITY LOG ===================== */
 function logActivity(actor, action, detail){
@@ -543,6 +554,28 @@ function logActivity(actor, action, detail){
     activityLog.unshift({ time:new Date(now), actor, action, detail: entry.detail });
     if (activityLog.length > 200) activityLog.pop();
   }
+}
+
+/* ===================== AUTH ERROR MESSAGES ===================== */
+function authErrorMessage(e){
+  const code = e && e.code;
+  const map = {
+    'auth/email-already-in-use':'Email sudah terdaftar untuk akun lain.',
+    'auth/invalid-email':'Format email tidak valid.',
+    'auth/weak-password':'Password terlalu lemah (minimal 6 karakter).',
+    'auth/wrong-password':'Password salah.',
+    'auth/user-not-found':'Akun tidak ditemukan.',
+    'auth/too-many-requests':'Terlalu banyak percobaan. Coba lagi beberapa saat lagi.',
+    'auth/network-request-failed':'Gagal terhubung ke server. Periksa koneksi internet.'
+  };
+  return map[code] || ('Terjadi kesalahan: '+(e && e.message ? e.message : 'tidak diketahui'));
+}
+async function triggerPasswordReset(email){
+  if (!email){ alert('Email belum terdaftar.'); return; }
+  try{
+    if (FIREBASE_ENABLED) await auth.sendPasswordResetEmail(email);
+    alert('Email reset password telah dikirim ke '+email+'. Silakan cek inbox (atau folder spam).');
+  }catch(e){ alert(authErrorMessage(e)); }
 }
 
 /* ===================== BOOKING LOGIC ===================== */
@@ -582,13 +615,6 @@ async function setBookingStatus(b, status){
     try{ await db.collection('bookings').doc(b.id).update({status}); }catch(e){ alert('Gagal menyimpan ke server.'); }
   } else { b.status = status; }
 }
-async function setPassword(name, val){
-  if (FIREBASE_ENABLED){
-    try{ await db.collection('passwords').doc(name).set({password:val}); }catch(e){ alert('Gagal menyimpan ke server.'); return false; }
-  }
-  passwords[name] = val;
-  return true;
-}
 async function setOverrideMode(mode){
   overrideMode = mode;
   if (FIREBASE_ENABLED){ try{ await db.collection('settings').doc('system').set({overrideMode:mode},{merge:true}); }catch(e){console.error(e);} }
@@ -601,13 +627,15 @@ function persistOdometer(){
   lastOdoWrite = t;
   db.collection('settings').doc('system').set({vehicleOdometerKm}, {merge:true}).catch(e=>console.error(e));
 }
-let lastDistWrite = {};
-function persistBookingDistance(b){
-  if (!FIREBASE_ENABLED) return;
+let lastTrackWrite = {};
+function persistBookingTracking(b, lat, lng){
+  if (!FIREBASE_ENABLED){ b.currentLat=lat; b.currentLng=lng; b.lastPosAt=new Date(now).toISOString(); return; }
   const t = Date.now();
-  if (lastDistWrite[b.id] && t - lastDistWrite[b.id] < 15000) return;
-  lastDistWrite[b.id] = t;
-  db.collection('bookings').doc(b.id).update({trackedDistanceKm:b.trackedDistanceKm}).catch(e=>console.error(e));
+  if (lastTrackWrite[b.id] && t - lastTrackWrite[b.id] < 12000) return;
+  lastTrackWrite[b.id] = t;
+  db.collection('bookings').doc(b.id).update({
+    trackedDistanceKm: b.trackedDistanceKm, currentLat: lat, currentLng: lng, lastPosAt: new Date().toISOString()
+  }).catch(e=>console.error(e));
 }
 
 /* ===================== GPS / MAPS HELPERS ===================== */
@@ -665,14 +693,13 @@ function startTracking(bookingId){
   trackingBookingId = bookingId; trackingLastPos = null;
   trackingWatchId = navigator.geolocation.watchPosition(pos => {
     const lat = pos.coords.latitude, lon = pos.coords.longitude;
-    if (trackingLastPos){
+    const b = bookings.find(x=>x.id===trackingBookingId);
+    if (trackingLastPos && b){
       const d = haversineKm(trackingLastPos.lat, trackingLastPos.lon, lat, lon);
-      if (d > 0 && d < 2){
-        const b = bookings.find(x=>x.id===trackingBookingId);
-        if (b){ b.trackedDistanceKm = (b.trackedDistanceKm||0) + d; vehicleOdometerKm += d; persistOdometer(); persistBookingDistance(b); renderStats(); }
-      }
+      if (d > 0 && d < 2){ b.trackedDistanceKm = (b.trackedDistanceKm||0) + d; vehicleOdometerKm += d; persistOdometer(); renderStats(); }
     }
     trackingLastPos = { lat, lon };
+    if (b) persistBookingTracking(b, lat, lon);
   }, () => {}, { enableHighAccuracy:true, maximumAge:5000, timeout:15000 });
 }
 function stopTracking(){
@@ -718,10 +745,7 @@ let boardCardStateKey = {};
 
 function mapsEmbedUrl(b){
   let q = null;
-  if (b.mapsUrl){
-    const m = b.mapsUrl.match(/q=([^&]+)/);
-    if (m) q = decodeURIComponent(m[1]);
-  }
+  if (b.mapsUrl){ const m = b.mapsUrl.match(/q=([^&]+)/); if (m) q = decodeURIComponent(m[1]); }
   if (!q) q = b.lokasi;
   if (!q) return null;
   return 'https://maps.google.com/maps?q='+encodeURIComponent(q)+'&z=15&output=embed';
@@ -792,12 +816,87 @@ function renderBoard(){
   });
 }
 function msToClock(ms){ if (ms<0) ms=0; const t=Math.floor(ms/1000); return pad(Math.floor(t/60))+':'+pad(t%60); }
-function escapeHtml(str){ const d=document.createElement('div'); d.textContent = str==null?'':str; return d.innerHTML; }
 
-/* ===================== RENDER: REQUEST TAB / LOGIN ===================== */
+/* ===================== REQUEST: NAME SELECT -> AUTH AREA ===================== */
 function initLoginSelect(){
   const sel = document.getElementById('loginNameSelect');
   REQUESTERS.forEach(name => { const opt=document.createElement('option'); opt.value=name; opt.textContent=name.toUpperCase(); sel.appendChild(opt); });
+  sel.addEventListener('change', onLoginNameChange);
+}
+async function onLoginNameChange(){
+  const name = document.getElementById('loginNameSelect').value;
+  document.getElementById('loginError').style.display = 'none';
+  if (!name) return;
+  const area = document.getElementById('reqAuthArea');
+  area.innerHTML = '<p class="note" style="margin-top:0;">Memeriksa akun...</p>';
+  let email = null;
+  try{
+    if (FIREBASE_ENABLED){
+      const snap = await db.collection('requesterProfiles').doc(name).get();
+      if (snap.exists) email = snap.data().email;
+    } else { email = localProfiles[name] ? localProfiles[name].email : null; }
+  }catch(e){ console.error(e); }
+  reqProfileEmail = email;
+  reqAuthMode = email ? 'login' : 'signup';
+  renderReqAuthArea();
+}
+function renderReqAuthArea(){
+  const area = document.getElementById('reqAuthArea');
+  if (reqAuthMode === 'login'){
+    area.innerHTML =
+      '<p class="note" style="margin-top:0;">Email terdaftar: <b style="color:var(--gold-soft)">'+escapeHtml(reqProfileEmail)+'</b></p>'+
+      '<label>Password</label><input type="password" id="loginPasswordInput" placeholder="••••">'+
+      '<div style="margin-top:18px;"><button class="btn btn-primary btn-block" id="loginSubmitBtn">Masuk</button></div>'+
+      '<div style="text-align:center;margin-top:10px;"><a href="#" id="forgotPasswordLink" style="color:var(--blue);font-size:11px;text-decoration:none;">Lupa Password?</a></div>';
+    document.getElementById('loginSubmitBtn').addEventListener('click', doRequesterLogin);
+    document.getElementById('forgotPasswordLink').addEventListener('click', async e => { e.preventDefault(); await triggerPasswordReset(reqProfileEmail); });
+  } else {
+    area.innerHTML =
+      '<p class="note" style="margin-top:0;">Nama ini belum terdaftar. Daftarkan email &amp; password sekali untuk seterusnya.</p>'+
+      '<label>Email</label><input type="text" id="signupEmailInput" placeholder="EMAIL@CONTOH.COM" style="text-transform:none;">'+
+      '<label>Buat Password (Min. 6 Karakter)</label><input type="password" id="signupPasswordInput" placeholder="••••••">'+
+      '<label>Konfirmasi Password</label><input type="password" id="signupConfirmInput" placeholder="••••••">'+
+      '<div style="margin-top:18px;"><button class="btn btn-primary btn-block" id="signupSubmitBtn">Daftar &amp; Masuk</button></div>';
+    document.getElementById('signupSubmitBtn').addEventListener('click', doRequesterSignup);
+  }
+}
+async function doRequesterLogin(){
+  const name = document.getElementById('loginNameSelect').value;
+  const pass = document.getElementById('loginPasswordInput').value;
+  const err = document.getElementById('loginError');
+  err.style.display = 'none';
+  try{
+    if (FIREBASE_ENABLED) await auth.signInWithEmailAndPassword(reqProfileEmail, pass);
+    else { if (!localProfiles[name] || localProfiles[name].password !== pass) throw {code:'auth/wrong-password'}; }
+    afterRequesterAuthed(name, reqProfileEmail);
+  }catch(e){ err.textContent = authErrorMessage(e); err.style.display = 'block'; }
+}
+async function doRequesterSignup(){
+  const name = document.getElementById('loginNameSelect').value;
+  const email = document.getElementById('signupEmailInput').value.trim();
+  const pass = document.getElementById('signupPasswordInput').value;
+  const conf = document.getElementById('signupConfirmInput').value;
+  const err = document.getElementById('loginError');
+  err.style.display = 'none';
+  if (!email || !email.includes('@')){ err.textContent='Email tidak valid.'; err.style.display='block'; return; }
+  if (pass.length < 6){ err.textContent='Password minimal 6 karakter.'; err.style.display='block'; return; }
+  if (pass !== conf){ err.textContent='Konfirmasi password tidak sama.'; err.style.display='block'; return; }
+  try{
+    if (FIREBASE_ENABLED){
+      await auth.createUserWithEmailAndPassword(email, pass);
+      await db.collection('requesterProfiles').doc(name).set({email});
+    } else { localProfiles[name] = {email, password:pass}; }
+    logActivity(name, 'DAFTAR AKUN', 'Akun requester didaftarkan dengan email '+email);
+    afterRequesterAuthed(name, email);
+  }catch(e){ err.textContent = authErrorMessage(e); err.style.display = 'block'; }
+}
+function afterRequesterAuthed(name, email){
+  session.requestRole = name; session.requestEmail = email;
+  reqSlotSig=null; locationGranted=false;
+  buildPassengerGrid();
+  logActivity(name, 'LOGIN REQUESTER', 'Berhasil login ke form request');
+  renderRequestTab();
+  requestLocationPermission().then(updateSubmitEnabled);
 }
 function initKeperluanSelect(){
   const sel = document.getElementById('keperluanSelect');
@@ -811,19 +910,6 @@ function buildPassengerGrid(){
   const pg = document.getElementById('passengerGrid'); pg.innerHTML = '';
   PASSENGERS.forEach(p => { const wrap=document.createElement('label'); wrap.className='chk-item'; wrap.innerHTML='<input type="checkbox" value="'+p+'"> '+p.toUpperCase(); pg.appendChild(wrap); });
 }
-document.getElementById('loginSubmitBtn').addEventListener('click', () => {
-  const name = document.getElementById('loginNameSelect').value;
-  const pass = document.getElementById('loginPasswordInput').value;
-  const err = document.getElementById('loginError');
-  if (!name || pass !== passwords[name]){ err.style.display='block'; return; }
-  err.style.display='none';
-  document.getElementById('loginPasswordInput').value='';
-  session.requestRole = name; reqSlotSig=null; locationGranted=false;
-  buildPassengerGrid();
-  logActivity(name, 'LOGIN REQUESTER', 'Berhasil login ke form request');
-  renderRequestTab();
-  requestLocationPermission().then(updateSubmitEnabled);
-});
 
 function computeMandatoryValid(){
   const missing = [];
@@ -850,6 +936,7 @@ function renderRequestTab(){
   if (!loggedIn) return;
 
   document.getElementById('reqUserName').textContent = session.requestRole.toUpperCase();
+  document.getElementById('reqAccountEmail').textContent = session.requestEmail || '-';
 
   const windowOpen = effectiveWindowOpen();
   const banner = document.getElementById('reqStatusBanner');
@@ -960,39 +1047,89 @@ document.getElementById('submitBookingBtn').addEventListener('click', async () =
 
 document.getElementById('reqLogoutBtn').addEventListener('click', () => {
   logActivity(session.requestRole, 'LOGOUT', '-');
-  session.requestRole=null; reqSlotSig=null; locationGranted=false; stopTracking();
+  if (FIREBASE_ENABLED) auth.signOut().catch(()=>{});
+  session.requestRole=null; session.requestEmail=null; reqSlotSig=null; locationGranted=false; stopTracking();
+  document.getElementById('loginNameSelect').value='';
+  document.getElementById('reqAuthArea').innerHTML='';
   renderRequestTab();
 });
-
-/* ===================== REQUESTER: UBAH PASSWORD ===================== */
 document.getElementById('pwdChangeBtn').addEventListener('click', async () => {
-  const oldP = document.getElementById('pwdOldInput').value;
-  const newP = document.getElementById('pwdNewInput').value;
-  const confP = document.getElementById('pwdConfirmInput').value;
   const msg = document.getElementById('pwdChangeMsg');
-  if (oldP !== passwords[session.requestRole]){ msg.style.color='var(--red)'; msg.textContent='Password lama salah.'; return; }
-  if (!newP || newP.length < 4){ msg.style.color='var(--red)'; msg.textContent='Password baru minimal 4 karakter.'; return; }
-  if (newP !== confP){ msg.style.color='var(--red)'; msg.textContent='Konfirmasi password tidak sama.'; return; }
-  await setPassword(session.requestRole, newP);
-  logActivity(session.requestRole, 'UBAH PASSWORD', 'Password diperbarui oleh requester sendiri');
-  document.getElementById('pwdOldInput').value=''; document.getElementById('pwdNewInput').value=''; document.getElementById('pwdConfirmInput').value='';
-  msg.style.color='var(--green)'; msg.textContent='Password berhasil diubah.';
+  await triggerPasswordReset(session.requestEmail);
+  msg.style.color='var(--green)'; msg.textContent='Email perubahan password telah dikirim.';
 });
 
-/* ===================== ADMIN: LOGIN ===================== */
-document.getElementById('adminLoginBtn').addEventListener('click', () => {
+/* ===================== ADMIN: AUTH ===================== */
+async function checkAdminProfile(){
+  let email = null;
+  try{
+    if (FIREBASE_ENABLED){
+      const snap = await db.collection('adminProfile').doc('main').get();
+      if (snap.exists) email = snap.data().email;
+    } else { email = localAdminProfile ? localAdminProfile.email : null; }
+  }catch(e){ console.error(e); }
+  adminProfileEmail = email;
+  adminAuthMode = email ? 'login' : 'signup';
+  renderAdminAuthArea();
+}
+function renderAdminAuthArea(){
+  const area = document.getElementById('adminAuthArea');
+  if (adminAuthMode === 'login'){
+    area.innerHTML =
+      '<div class="login-sub">Email: <b style="color:var(--gold-soft)">'+escapeHtml(adminProfileEmail)+'</b></div>'+
+      '<label>Password</label><input type="password" id="adminPasswordInput" placeholder="••••••••">'+
+      '<div style="margin-top:18px;"><button class="btn btn-primary btn-block" id="adminLoginBtn">Masuk</button></div>'+
+      '<div style="text-align:center;margin-top:10px;"><a href="#" id="adminForgotLink" style="color:var(--blue);font-size:11px;text-decoration:none;">Lupa Password?</a></div>';
+    document.getElementById('adminLoginBtn').addEventListener('click', doAdminLogin);
+    document.getElementById('adminForgotLink').addEventListener('click', async e => { e.preventDefault(); await triggerPasswordReset(adminProfileEmail); });
+  } else {
+    area.innerHTML =
+      '<div class="login-sub">Belum ada akun admin. Daftarkan email &amp; password admin (sekali saja).</div>'+
+      '<label>Email Admin</label><input type="text" id="adminSignupEmailInput" placeholder="EMAIL@CONTOH.COM" style="text-transform:none;">'+
+      '<label>Buat Password (Min. 6 Karakter)</label><input type="password" id="adminSignupPasswordInput" placeholder="••••••">'+
+      '<label>Konfirmasi Password</label><input type="password" id="adminSignupConfirmInput" placeholder="••••••">'+
+      '<div style="margin-top:18px;"><button class="btn btn-primary btn-block" id="adminSignupBtn">Daftar &amp; Masuk</button></div>';
+    document.getElementById('adminSignupBtn').addEventListener('click', doAdminSignup);
+  }
+}
+async function doAdminLogin(){
   const pass = document.getElementById('adminPasswordInput').value;
   const err = document.getElementById('adminLoginError');
-  if (pass !== adminPassword){ err.style.display='block'; return; }
-  err.style.display='none';
-  document.getElementById('adminPasswordInput').value='';
-  session.adminLoggedIn = true;
+  err.style.display = 'none';
+  try{
+    if (FIREBASE_ENABLED) await auth.signInWithEmailAndPassword(adminProfileEmail, pass);
+    else { if (!localAdminProfile || localAdminProfile.password !== pass) throw {code:'auth/wrong-password'}; }
+    afterAdminAuthed(adminProfileEmail);
+  }catch(e){ err.textContent = authErrorMessage(e); err.style.display = 'block'; }
+}
+async function doAdminSignup(){
+  const email = document.getElementById('adminSignupEmailInput').value.trim();
+  const pass = document.getElementById('adminSignupPasswordInput').value;
+  const conf = document.getElementById('adminSignupConfirmInput').value;
+  const err = document.getElementById('adminLoginError');
+  err.style.display = 'none';
+  if (!email || !email.includes('@')){ err.textContent='Email tidak valid.'; err.style.display='block'; return; }
+  if (pass.length < 6){ err.textContent='Password minimal 6 karakter.'; err.style.display='block'; return; }
+  if (pass !== conf){ err.textContent='Konfirmasi password tidak sama.'; err.style.display='block'; return; }
+  try{
+    if (FIREBASE_ENABLED){
+      await auth.createUserWithEmailAndPassword(email, pass);
+      await db.collection('adminProfile').doc('main').set({email});
+    } else { localAdminProfile = {email, password:pass}; }
+    logActivity('ADMIN', 'DAFTAR AKUN ADMIN', 'Akun admin didaftarkan dengan email '+email);
+    afterAdminAuthed(email);
+  }catch(e){ err.textContent = authErrorMessage(e); err.style.display = 'block'; }
+}
+function afterAdminAuthed(email){
+  session.adminLoggedIn = true; session.adminEmail = email;
   logActivity('ADMIN','LOGIN ADMIN','-');
   renderAdminTab();
-});
+}
 document.getElementById('adminLogoutBtn').addEventListener('click', () => {
   logActivity('ADMIN','LOGOUT ADMIN','-');
-  session.adminLoggedIn = false;
+  if (FIREBASE_ENABLED) auth.signOut().catch(()=>{});
+  session.adminLoggedIn = false; session.adminEmail = null;
+  checkAdminProfile();
   renderAdminTab();
 });
 
@@ -1002,9 +1139,11 @@ function renderAdminTab(){
   if (!session.adminLoggedIn) return;
 
   renderStats();
+  renderLiveMap();
+  renderRekap();
 
   const row = document.getElementById('overrideRow');
-  const opts = [ {key:'normal',label:'NORMAL (IKUTI JAM SERVER)'}, {key:'forceOpen',label:'FORCE OPEN'}, {key:'forceClose',label:'FORCE CLOSE'} ];
+  const opts = [ {key:'normal',label:'NORMAL'}, {key:'forceOpen',label:'FORCE OPEN'}, {key:'forceClose',label:'FORCE CLOSE'} ];
   row.innerHTML = '';
   opts.forEach(o => {
     const div = document.createElement('div');
@@ -1019,7 +1158,7 @@ function renderAdminTab(){
   if (userSel.options.length===0) REQUESTERS.forEach(n => { const opt=document.createElement('option'); opt.value=n; opt.textContent=n.toUpperCase(); userSel.appendChild(opt); });
   refreshAdminSlotSelect();
   renderAdminBookingsTable();
-  renderPasswordManager();
+  renderAccountManager();
   renderActivityLog();
 }
 document.getElementById('adminDateSelect').addEventListener('change', refreshAdminSlotSelect);
@@ -1093,27 +1232,32 @@ function statusBadgeAdmin(b,start,end){
   return '<span class="badge overtime">OVERTIME</span>';
 }
 
-/* ===================== ADMIN: PASSWORD MANAGEMENT ===================== */
-function renderPasswordManager(){
-  const wrap = document.getElementById('pwdManageWrap');
+/* ===================== ADMIN: ACCOUNT MANAGEMENT (Firebase Auth, kirim email reset) ===================== */
+function renderAccountManager(){
+  const wrap = document.getElementById('accountManageWrap');
   if (wrap.dataset.built === '1') return;
-  wrap.dataset.built = '1'; wrap.innerHTML = '';
-  REQUESTERS.forEach(name => {
-    const row = document.createElement('div'); row.className = 'pwd-row';
-    row.innerHTML = '<span class="pwd-name">'+name.toUpperCase()+'</span><input type="text" placeholder="PASSWORD BARU" id="pwdInput_'+name+'"><button class="btn btn-ghost btn-small" data-reset="'+name+'">RESET</button>';
-    wrap.appendChild(row);
+  wrap.dataset.built = '1';
+  wrap.innerHTML = REQUESTERS.map(name => '<div class="acc-row" id="accRow_'+name+'"><span class="acc-name">'+name.toUpperCase()+'</span><span class="acc-email" id="accEmail_'+name+'">Memeriksa...</span></div>').join('');
+  REQUESTERS.forEach(async name => {
+    let email = null;
+    try{
+      if (FIREBASE_ENABLED){
+        const snap = await db.collection('requesterProfiles').doc(name).get();
+        if (snap.exists) email = snap.data().email;
+      } else { email = localProfiles[name] ? localProfiles[name].email : null; }
+    }catch(e){ console.error(e); }
+    const row = document.getElementById('accRow_'+name);
+    if (!row) return;
+    if (email){
+      row.querySelector('.acc-email').textContent = email;
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-ghost btn-small'; btn.textContent = 'KIRIM RESET PASSWORD';
+      btn.onclick = async () => { await triggerPasswordReset(email); logActivity('ADMIN','KIRIM RESET PASSWORD', name+' — '+email); };
+      row.appendChild(btn);
+    } else {
+      row.querySelector('.acc-email').textContent = 'BELUM TERDAFTAR';
+    }
   });
-  wrap.querySelectorAll('[data-reset]').forEach(btn => btn.addEventListener('click', async () => {
-    const name = btn.dataset.reset;
-    const input = document.getElementById('pwdInput_'+name);
-    const val = input.value.trim();
-    if (!val){ alert('Isi password baru untuk '+name+' terlebih dahulu.'); return; }
-    await setPassword(name, val);
-    input.value = '';
-    logActivity('ADMIN','RESET PASSWORD','Password '+name+' diperbarui oleh admin');
-    renderActivityLog();
-    alert('Password untuk '+name+' berhasil diperbarui.');
-  }));
 }
 
 /* ===================== ADMIN: ACTIVITY LOG ===================== */
@@ -1131,7 +1275,77 @@ function renderActivityLog(){
   });
 }
 
-/* ===================== LAPORAN & CETAK PDF (via dialog print browser) ===================== */
+/* ===================== ADMIN: LIVE VEHICLE MAP ===================== */
+function renderLiveMap(){
+  const wrap = document.getElementById('liveMapWrap');
+  const todayKey = dateKeyOf(now);
+  const active = bookings.filter(b => b.status==='BOOKED' && b.dateKey===todayKey && now>=slotStartDate(b.dateKey,b.startHour) && now<slotEndDate(b.dateKey,b.startHour));
+  if (active.length===0){ if (wrap.dataset.cache!=='empty'){ wrap.dataset.cache='empty'; wrap.innerHTML = '<p class="empty-state">TIDAK ADA SESI YANG SEDANG BERJALAN</p>'; } return; }
+  const sig = active.map(b=>b.id+':'+b.currentLat+':'+b.currentLng).join(',');
+  if (wrap.dataset.cache === sig) return;
+  wrap.dataset.cache = sig; wrap.innerHTML = '';
+  active.forEach(b => {
+    const card = document.createElement('div');
+    card.className = 'stat-card'; card.style.minWidth='260px'; card.style.flex='1 1 280px';
+    let mapHtml;
+    if (b.currentLat && b.currentLng){
+      const url = 'https://maps.google.com/maps?q='+b.currentLat+','+b.currentLng+'&z=16&output=embed';
+      mapHtml = '<a class="maps-embed-link" target="_blank" rel="noopener" href="'+mapsCoordLink(b.currentLat,b.currentLng)+'"><iframe class="maps-embed" style="height:140px;" src="'+url+'" loading="lazy"></iframe></a>'+
+        '<p class="note" style="margin-top:6px;">Update terakhir: '+(b.lastPosAt ? fmtDateTime(new Date(b.lastPosAt)) : '-')+'</p>';
+    } else {
+      mapHtml = '<p class="note" style="margin-top:6px;">Menunggu sinyal GPS dari perangkat requester...</p>';
+    }
+    card.innerHTML = '<div class="stat-label">'+b.requester.toUpperCase()+' — '+fmtHM(b.startHour)+'–'+fmtHM(b.endHour)+'</div>'+
+      '<div style="font-size:11px;color:var(--text-dim);margin:4px 0;">TUJUAN: '+escapeHtml(b.lokasi||'-')+'</div>'+mapHtml;
+    wrap.appendChild(card);
+  });
+}
+
+/* ===================== ADMIN: REKAP JARAK ===================== */
+let rekapRange = 'daily';
+function renderRekapRangeButtons(){
+  const row = document.getElementById('rekapRangeRow');
+  const opts = [{key:'daily',label:'HARIAN'},{key:'weekly',label:'MINGGUAN'},{key:'monthly',label:'BULANAN'}];
+  row.innerHTML = '';
+  opts.forEach(o => {
+    const div = document.createElement('div');
+    div.className = 'override-opt' + (rekapRange===o.key ? ' active-open' : '');
+    div.textContent = o.label;
+    div.onclick = () => { rekapRange = o.key; renderRekap(); };
+    row.appendChild(div);
+  });
+}
+function renderRekap(){
+  renderRekapRangeButtons();
+  const { rows } = buildReport(rekapRange);
+  const detailBody = document.getElementById('rekapDetailBody');
+  detailBody.innerHTML = '';
+  if (rows.length===0) detailBody.innerHTML = '<tr><td colspan="6" class="empty-state">TIDAK ADA DATA</td></tr>';
+  const totals = {};
+  rows.forEach(b => {
+    totals[b.requester] = (totals[b.requester]||0) + (b.trackedDistanceKm||0);
+    const tr = document.createElement('tr');
+    const link = b.mapsUrl || (b.lokasi ? mapsSearchLink(b.lokasi) : null);
+    tr.innerHTML = '<td>'+fmtDateLabel(new Date(b.dateKey))+'</td>'+
+      '<td>'+fmtHM(b.startHour)+'–'+fmtHM(b.endHour)+'</td>'+
+      '<td>'+b.requester.toUpperCase()+'</td>'+
+      '<td><a class="maps-link" target="_blank" rel="noopener" href="'+OFFICE_MAPS_LINK+'">📍 KANTOR PUSAT</a></td>'+
+      '<td>'+(link ? '<a class="maps-link" target="_blank" rel="noopener" href="'+link+'">📍 '+escapeHtml(b.lokasi)+'</a>' : '-')+'</td>'+
+      '<td>'+(b.trackedDistanceKm?b.trackedDistanceKm.toFixed(1):'-')+'</td>';
+    detailBody.appendChild(tr);
+  });
+  const totalBody = document.getElementById('rekapTotalBody');
+  totalBody.innerHTML = '';
+  const names = Object.keys(totals);
+  if (names.length===0) totalBody.innerHTML = '<tr><td colspan="2" class="empty-state">TIDAK ADA DATA</td></tr>';
+  names.sort().forEach(n => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td>'+n.toUpperCase()+'</td><td>'+totals[n].toFixed(1)+' KM</td>';
+    totalBody.appendChild(tr);
+  });
+}
+
+/* ===================== LAPORAN & CETAK PDF ===================== */
 function buildReport(rangeType){
   const all = reportArchive.concat(bookings).filter(b=>b.status!=='CANCELLED');
   const todayStart = startOfDay(now);
@@ -1163,7 +1377,7 @@ document.getElementById('reportDailyBtn').addEventListener('click', () => printR
 document.getElementById('reportWeeklyBtn').addEventListener('click', () => printReport('weekly'));
 document.getElementById('reportMonthlyBtn').addEventListener('click', () => printReport('monthly'));
 
-/* ===================== RESET HARIAN JAM 18:00 (arsip ke laporan, sesi direset) ===================== */
+/* ===================== RESET HARIAN JAM 18:00 ===================== */
 function checkDailyReset(){
   if (resetCheckInFlight) return;
   const todayStr = startOfDay(now).toDateString();
@@ -1223,6 +1437,7 @@ document.getElementById('footerCopyright').addEventListener('click', () => {
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-admin').classList.add('active');
+  if (!session.adminLoggedIn && !adminAuthChecked){ adminAuthChecked = true; checkAdminProfile(); }
   renderAll();
 });
 
