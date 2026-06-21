@@ -778,7 +778,7 @@ function persistBookingTracking(b, lat, lng){
 }
 function persistArrival(b){
   if (!FIREBASE_ENABLED) return;
-  db.collection('bookings').doc(b.id).update({ arrivedAt: b.arrivedAt, arrivedSource: b.arrivedSource||'auto', arrivedLat: b.arrivedLat||null, arrivedLng: b.arrivedLng||null }).catch(e=>console.error(e));
+  db.collection('bookings').doc(b.id).update({ arrivedAt: b.arrivedAt, arrivedSource: b.arrivedSource||'auto', arrivedLat: b.arrivedLat||null, arrivedLng: b.arrivedLng||null, arrivedAddress: b.arrivedAddress||null }).catch(e=>console.error(e));
 }
 
 /* ===================== LOKASI: IZIN + PERSISTENSI ===================== */
@@ -868,6 +868,7 @@ function startTracking(bookingId){
           b.arrivedSource = 'auto';
           b.arrivedLat = lat; b.arrivedLng = lon;
           persistArrival(b);
+          reverseGeocode(lat, lon).then(addr => { if (addr){ b.arrivedAddress = addr; persistArrival(b); renderLiveMap(); } });
           logActivity(b.requester, 'TIBA DI LOKASI TUJUAN (GPS OTOMATIS)', fmtDateTime(now)+' (radius '+ARRIVAL_RADIUS_M+'m)');
         }
       }
@@ -922,6 +923,13 @@ async function onPickerLocationChanged(lat, lng){
     const data = await res.json();
     if (data && data.display_name){ mapPickerCurrent.address = data.display_name; updatePickerPreview(); }
   }catch(e){ /* tetap pakai koordinat saja kalau gagal reverse-geocode */ }
+}
+async function reverseGeocode(lat, lng){
+  try{
+    const res = await fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lng+'&format=json');
+    const data = await res.json();
+    return (data && data.display_name) ? data.display_name : null;
+  }catch(e){ return null; }
 }
 function updatePickerPreview(){
   if (!mapPickerCurrent) return;
@@ -1294,10 +1302,14 @@ function renderActiveSessionCard(){
     document.getElementById('bigArriveBtn').addEventListener('click', async () => {
       const btn = document.getElementById('bigArriveBtn');
       btn.disabled = true; btn.textContent = 'MENGAMBIL LOKASI...';
-      const finalizeArrival = (lat, lng) => {
+      const finalizeArrival = async (lat, lng) => {
         active.arrivedAt = new Date(now).toISOString();
         active.arrivedSource = 'manual';
-        if (lat != null){ active.arrivedLat = lat; active.arrivedLng = lng; }
+        if (lat != null){
+          active.arrivedLat = lat; active.arrivedLng = lng;
+          btn.textContent = 'MENCARI ALAMAT...';
+          active.arrivedAddress = await reverseGeocode(lat, lng);
+        }
         persistArrival(active);
         let distNote = '';
         if (lat != null && active.lokasiLat){
@@ -1679,7 +1691,8 @@ document.getElementById('arrivalHistoryViewBtn').addEventListener('click', () =>
     '<div class="stat-card">'+
     '<div class="stat-label">'+b.requester.toUpperCase()+' — '+fmtHM(b.startHour)+'–'+fmtHM(b.endHour)+' ('+fmtDateLabel(new Date(b.dateKey))+')</div>'+
     '<div style="font-size:11px;color:var(--text-dim);margin:4px 0;">TUJUAN: '+(destLink ? '<a class="maps-link" target="_blank" rel="noopener" href="'+destLink+'">📍 '+escapeHtml(b.lokasi)+'</a>' : escapeHtml(b.lokasi||'-'))+'</div>'+
-    '<p class="note" style="margin-top:8px;margin-bottom:0;color:var(--green);">📍 Lokasi saat konfirmasi tiba ('+(b.arrivedSource==='manual'?'manual':'GPS otomatis')+') — '+fmtDateTime(new Date(b.arrivedAt))+'</p>'+
+    '<p class="note" style="margin-top:8px;margin-bottom:0;color:var(--green);">📍 <a class="maps-link" target="_blank" rel="noopener" href="'+mapsCoordLink(b.arrivedLat,b.arrivedLng)+'" style="color:var(--green);">'+escapeHtml(b.arrivedAddress || (b.arrivedLat.toFixed(5)+', '+b.arrivedLng.toFixed(5)))+'</a></p>'+
+    '<p class="note" style="margin-top:2px;">Dikonfirmasi '+(b.arrivedSource==='manual'?'manual':'GPS otomatis')+' — '+fmtDateTime(new Date(b.arrivedAt))+'</p>'+
     checkNote+
     '<a class="maps-embed-link" target="_blank" rel="noopener" href="'+mapsCoordLink(b.arrivedLat,b.arrivedLng)+'" style="margin-top:8px;"><iframe class="maps-embed" style="height:160px;" src="'+aurl+'" loading="lazy"></iframe></a>'+
     '</div>';
@@ -1693,7 +1706,7 @@ function renderLiveMap(){
   const active = bookings.filter(b => b.status==='BOOKED' && b.dateKey===todayKey && now>=slotStartDate(b.dateKey,b.startHour) && now<slotEndDate(b.dateKey,b.startHour))
     .sort((a,b) => new Date(b.lastPosAt||0) - new Date(a.lastPosAt||0));
   if (active.length===0){ if (wrap.dataset.cache!=='empty'){ wrap.dataset.cache='empty'; wrap.innerHTML = '<p class="empty-state">TIDAK ADA SESI YANG SEDANG BERJALAN</p>'; } return; }
-  const sig = active.map(b=>b.id+':'+b.currentLat+':'+b.currentLng+':'+b.arrivedAt+':'+b.arrivedLat).join(',');
+  const sig = active.map(b=>b.id+':'+b.currentLat+':'+b.currentLng+':'+b.arrivedAt+':'+b.arrivedLat+':'+b.arrivedAddress).join(',');
   if (wrap.dataset.cache === sig) return;
   wrap.dataset.cache = sig; wrap.innerHTML = '';
   active.forEach(b => {
@@ -1716,7 +1729,8 @@ function renderLiveMap(){
         const prox = arrivalProximityLabel(distM);
         checkNote = '<div style="margin-top:4px;"><span style="color:'+prox.color+';font-weight:700;">'+prox.text+'</span> <span style="color:var(--text-dim-2);">('+distM+'m dari titik tujuan)</span></div>';
       }
-      arrivalMapHtml = '<p class="note" style="margin-top:10px;margin-bottom:0;color:var(--green);">📍 Lokasi saat konfirmasi tiba ('+(b.arrivedSource==='manual'?'manual':'GPS otomatis')+')</p>'+checkNote+
+      arrivalMapHtml = '<p class="note" style="margin-top:10px;margin-bottom:0;color:var(--green);">📍 '+escapeHtml(b.arrivedAddress || (b.arrivedLat.toFixed(5)+', '+b.arrivedLng.toFixed(5)))+'</p>'+
+        '<p class="note" style="margin-top:2px;">Dikonfirmasi '+(b.arrivedSource==='manual'?'manual':'GPS otomatis')+'</p>'+checkNote+
         '<a class="maps-embed-link" target="_blank" rel="noopener" href="'+mapsCoordLink(b.arrivedLat,b.arrivedLng)+'"><iframe class="maps-embed" style="height:140px;" src="'+aurl+'" loading="lazy"></iframe></a>';
     }
     const arrivedBadge = b.arrivedAt ? '<span class="badge cleared" style="background:rgba(62,219,143,.18);color:var(--green);">✅ TIBA DI TUJUAN</span>' : '';
