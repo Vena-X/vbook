@@ -460,6 +460,16 @@
           </table>
         </div>
       </div>
+
+      <div class="panel glass">
+        <h2>Riwayat Verifikasi Lokasi Tiba</h2>
+        <p class="note" style="margin-top:0;">Cek kapan saja (bukan cuma yang sedang berjalan) — pilih booking mana yang mau diperiksa lokasi konfirmasi tibanya.</p>
+        <div class="input-with-btn">
+          <select id="arrivalHistorySelect"><option value="">— PILIH BOOKING —</option></select>
+          <button class="btn btn-primary btn-small" id="arrivalHistoryViewBtn">Lihat</button>
+        </div>
+        <div id="arrivalHistoryResult" style="margin-top:12px;"></div>
+      </div>
     </div>
   </section>
 
@@ -1492,6 +1502,7 @@ function renderAdminTab(){
   renderAdminBookingsTable();
   renderAccountManager();
   renderActivityLog();
+  renderArrivalHistorySelect();
 }
 
 /* ===================== ADMIN: FORCE BOOKING (slot fix, semua jam aktif, lokasi via peta) ===================== */
@@ -1627,6 +1638,53 @@ function renderActivityLog(){
     body.appendChild(tr);
   });
 }
+
+/* ===================== ADMIN: RIWAYAT VERIFIKASI LOKASI TIBA (cek kapan saja, terpisah) ===================== */
+function getArrivalCandidates(){
+  return reportArchive.concat(bookings)
+    .filter(b => b.status!=='CANCELLED' && b.arrivedAt && b.arrivedLat && b.arrivedLng)
+    .sort((a,b) => new Date(b.arrivedAt) - new Date(a.arrivedAt));
+}
+function renderArrivalHistorySelect(){
+  const sel = document.getElementById('arrivalHistorySelect');
+  const candidates = getArrivalCandidates();
+  const sig = candidates.map(b=>b.id).join(',');
+  if (sel.dataset.cache === sig) return;
+  sel.dataset.cache = sig;
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">— PILIH BOOKING —</option>';
+  candidates.forEach(b => {
+    const opt = document.createElement('option');
+    opt.value = b.id;
+    opt.textContent = fmtDateLabel(new Date(b.dateKey))+' — '+b.requester.toUpperCase()+' — '+fmtHM(b.startHour)+'–'+fmtHM(b.endHour);
+    sel.appendChild(opt);
+  });
+  if (prev && Array.from(sel.options).some(o=>o.value===prev)) sel.value = prev;
+}
+document.getElementById('arrivalHistoryViewBtn').addEventListener('click', () => {
+  const id = document.getElementById('arrivalHistorySelect').value;
+  const result = document.getElementById('arrivalHistoryResult');
+  if (!id){ result.innerHTML = '<p class="note" style="margin-top:0;">Pilih booking dulu.</p>'; return; }
+  const b = getArrivalCandidates().find(x => x.id == id);
+  if (!b){ result.innerHTML = '<p class="note" style="margin-top:0;">Data tidak ditemukan.</p>'; return; }
+  const aurl = 'https://maps.google.com/maps?q='+b.arrivedLat+','+b.arrivedLng+'&z=16&output=embed';
+  const destLink = b.mapsUrl || (b.lokasi ? mapsSearchLink(b.lokasi) : null);
+  let checkNote = '';
+  if (b.lokasiLat && b.lokasiLng){
+    const distM = Math.round(haversineKm(b.arrivedLat,b.arrivedLng,b.lokasiLat,b.lokasiLng)*1000);
+    const prox = arrivalProximityLabel(distM);
+    checkNote = '<div style="margin-top:6px;"><span style="color:'+prox.color+';font-weight:700;">'+prox.text+'</span> <span style="color:var(--text-dim-2);">('+distM+'m dari titik tujuan)</span></div>';
+  }
+  result.innerHTML =
+    '<div class="stat-card">'+
+    '<div class="stat-label">'+b.requester.toUpperCase()+' — '+fmtHM(b.startHour)+'–'+fmtHM(b.endHour)+' ('+fmtDateLabel(new Date(b.dateKey))+')</div>'+
+    '<div style="font-size:11px;color:var(--text-dim);margin:4px 0;">TUJUAN: '+(destLink ? '<a class="maps-link" target="_blank" rel="noopener" href="'+destLink+'">📍 '+escapeHtml(b.lokasi)+'</a>' : escapeHtml(b.lokasi||'-'))+'</div>'+
+    '<p class="note" style="margin-top:8px;margin-bottom:0;color:var(--green);">📍 Lokasi saat konfirmasi tiba ('+(b.arrivedSource==='manual'?'manual':'GPS otomatis')+') — '+fmtDateTime(new Date(b.arrivedAt))+'</p>'+
+    checkNote+
+    '<a class="maps-embed-link" target="_blank" rel="noopener" href="'+mapsCoordLink(b.arrivedLat,b.arrivedLng)+'" style="margin-top:8px;"><iframe class="maps-embed" style="height:160px;" src="'+aurl+'" loading="lazy"></iframe></a>'+
+    '</div>';
+});
+
 
 /* ===================== ADMIN: LIVE VEHICLE MAP ===================== */
 function renderLiveMap(){
